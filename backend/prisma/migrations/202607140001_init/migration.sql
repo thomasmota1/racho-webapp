@@ -1,0 +1,93 @@
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');
+CREATE TYPE "GroupStatus" AS ENUM ('ACTIVE', 'ARCHIVED');
+CREATE TYPE "SettlementStatus" AS ENUM ('PENDING', 'CONFIRMED', 'REJECTED');
+
+CREATE TABLE "User" (
+  "id" SERIAL PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "email" TEXT NOT NULL UNIQUE,
+  "passwordHash" TEXT NOT NULL,
+  "role" "Role" NOT NULL DEFAULT 'USER',
+  "active" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Group" (
+  "id" SERIAL PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "description" TEXT,
+  "coverEmoji" TEXT NOT NULL DEFAULT '🎉',
+  "status" "GroupStatus" NOT NULL DEFAULT 'ACTIVE',
+  "createdById" INTEGER NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Group_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "GroupMember" (
+  "id" SERIAL PRIMARY KEY,
+  "groupId" INTEGER NOT NULL,
+  "userId" INTEGER NOT NULL,
+  "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "GroupMember_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "GroupMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "GroupMember_groupId_userId_key" UNIQUE ("groupId", "userId")
+);
+
+CREATE TABLE "Category" (
+  "id" SERIAL PRIMARY KEY,
+  "name" TEXT NOT NULL UNIQUE,
+  "icon" TEXT NOT NULL DEFAULT '🧾',
+  "color" TEXT NOT NULL DEFAULT '#6558d3',
+  "active" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Expense" (
+  "id" SERIAL PRIMARY KEY,
+  "groupId" INTEGER NOT NULL,
+  "title" TEXT NOT NULL,
+  "description" TEXT,
+  "amount" DECIMAL(12,2) NOT NULL,
+  "date" TIMESTAMP(3) NOT NULL,
+  "payerId" INTEGER NOT NULL,
+  "createdById" INTEGER NOT NULL,
+  "categoryId" INTEGER NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Expense_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "Expense_payerId_fkey" FOREIGN KEY ("payerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "Expense_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "Expense_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE "ExpenseShare" (
+  "id" SERIAL PRIMARY KEY,
+  "expenseId" INTEGER NOT NULL,
+  "userId" INTEGER NOT NULL,
+  "amount" DECIMAL(12,2) NOT NULL,
+  CONSTRAINT "ExpenseShare_expenseId_fkey" FOREIGN KEY ("expenseId") REFERENCES "Expense"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ExpenseShare_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ExpenseShare_expenseId_userId_key" UNIQUE ("expenseId", "userId")
+);
+
+CREATE TABLE "Settlement" (
+  "id" SERIAL PRIMARY KEY,
+  "groupId" INTEGER NOT NULL,
+  "payerId" INTEGER NOT NULL,
+  "receiverId" INTEGER NOT NULL,
+  "createdById" INTEGER NOT NULL,
+  "amount" DECIMAL(12,2) NOT NULL,
+  "method" TEXT NOT NULL DEFAULT 'PIX',
+  "note" TEXT,
+  "status" "SettlementStatus" NOT NULL DEFAULT 'PENDING',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "confirmedAt" TIMESTAMP(3),
+  CONSTRAINT "Settlement_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "Settlement_payerId_fkey" FOREIGN KEY ("payerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "Settlement_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "Settlement_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);

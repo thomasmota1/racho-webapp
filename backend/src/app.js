@@ -6,23 +6,23 @@ import groupRoutes from './routes/groupRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import settlementRoutes from './routes/settlementRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import { errorHandler, notFound } from './middlewares/errorHandler.js';
+import { rotaNaoEncontrada, tratarErro } from './middlewares/errorHandler.js';
 
-const app = express();
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
-app.use(express.json());
+const aplicacao = express();
+aplicacao.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
+aplicacao.use(express.json());
 
-app.get('/api/health', (_request, response) => {
-  response.json({ status: 'ok', application: 'Rachô API' });
+aplicacao.get('/api/health', (_requisicao, resposta) => {
+  resposta.json({ status: 'ok', application: 'Rachô API' });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/groups', groupRoutes);
-app.use('/api/expenses', expenseRoutes);
-app.use('/api/settlements', settlementRoutes);
-app.use('/api/admin', adminRoutes);
-app.use(notFound);
-app.use(errorHandler);
+aplicacao.use('/api/auth', authRoutes);
+aplicacao.use('/api/categories', categoryRoutes);
+aplicacao.use('/api/groups', groupRoutes);
+aplicacao.use('/api/expenses', expenseRoutes);
+aplicacao.use('/api/settlements', settlementRoutes);
+aplicacao.use('/api/admin', adminRoutes);
+aplicacao.use(rotaNaoEncontrada);
+aplicacao.use(tratarErro);
 
-export default app;
+export default aplicacao;

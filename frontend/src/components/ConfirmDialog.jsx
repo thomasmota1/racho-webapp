@@ -2,29 +2,40 @@ import { useState } from 'react';
 import Modal from './Modal.jsx';
 import { Feedback } from './Feedback.jsx';
 
-export default function ConfirmDialog({ title, message, confirmLabel = 'Confirmar', onConfirm, onClose }) {
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+export default function DialogoConfirmacao({
+  titulo,
+  mensagem,
+  textoConfirmacao = 'Confirmar',
+  aoConfirmar,
+  aoFechar,
+}) {
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState('');
 
-  async function confirm() {
-    setSaving(true);
-    setError('');
+  async function confirmar() {
+    setSalvando(true);
+    setErro('');
+
     try {
-      await onConfirm();
-      onClose();
-    } catch (err) {
-      setError(err.message);
-      setSaving(false);
+      await aoConfirmar();
+      aoFechar();
+    } catch (falha) {
+      setErro(falha.message);
+      setSalvando(false);
     }
   }
 
   return (
-    <Modal title={title} subtitle={message} onClose={saving ? () => {} : onClose}>
+    <Modal titulo={titulo} subtitulo={mensagem} aoFechar={salvando ? () => {} : aoFechar}>
       <div className="form-stack">
-        <Feedback>{error}</Feedback>
+        <Feedback>{erro}</Feedback>
         <div className="form-actions">
-          <button type="button" className="button button--ghost" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="button" className="button button--danger" onClick={confirm} disabled={saving}>{saving ? 'Excluindo...' : confirmLabel}</button>
+          <button type="button" className="button button--ghost" onClick={aoFechar} disabled={salvando}>
+            Cancelar
+          </button>
+          <button type="button" className="button button--danger" onClick={confirmar} disabled={salvando}>
+            {salvando ? 'Excluindo...' : textoConfirmacao}
+          </button>
         </div>
       </div>
     </Modal>

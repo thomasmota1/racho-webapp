@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { deleteExpense, updateExpense } from '../controllers/expenseController.js';
-import { authenticate } from '../middlewares/auth.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import { atualizarDespesa, excluirDespesa } from '../controllers/expenseController.js';
+import { autenticar } from '../middlewares/auth.js';
+import { tratarErrosAssincronos } from '../utils/asyncHandler.js';
 
-const router = Router();
-router.use(authenticate);
-router.patch('/:id', asyncHandler(updateExpense));
-router.delete('/:id', asyncHandler(deleteExpense));
-export default router;
+const rotasDespesas = Router();
+rotasDespesas.use(autenticar);
+rotasDespesas.patch('/:id', tratarErrosAssincronos(atualizarDespesa));
+rotasDespesas.delete('/:id', tratarErrosAssincronos(excluirDespesa));
+export default rotasDespesas;

@@ -1,5 +1,5 @@
-import { initials } from '../utils/format.js';
+import { obterIniciais } from '../utils/format.js';
 
-export default function Avatar({ name, size = 'md' }) {
-  return <span className={`avatar avatar--${size}`}>{initials(name)}</span>;
+export default function Avatar({ nome, tamanho = 'md' }) {
+  return <span className={`avatar avatar--${tamanho}`}>{obterIniciais(nome)}</span>;
 }

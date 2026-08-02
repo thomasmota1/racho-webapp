@@ -1,4 +1,4 @@
-export default function Logo() {
+export default function Logotipo() {
   return (
     <div className="logo">
       <span className="logo__mark">R$</span>

@@ -1,69 +1,84 @@
 import prisma from '../lib/prisma.js';
-import { AppError } from '../utils/AppError.js';
-import { ensureGroupAccess } from '../services/permissionService.js';
+import { ErroAplicacao } from '../utils/AppError.js';
+import { garantirAcessoGrupo } from '../services/permissionService.js';
 
-export async function createSettlement(request, response) {
-  const groupId = Number(request.params.groupId);
-  await ensureGroupAccess(groupId, request.user);
-  const { payerId, receiverId, amount, method = 'PIX', note } = request.body;
-  const numericPayer = Number(payerId);
-  const numericReceiver = Number(receiverId);
-  const numericAmount = Number(amount);
+export async function criarAcerto(requisicao, resposta) {
+  const grupoId = Number(requisicao.params.groupId);
+  await garantirAcessoGrupo(grupoId, requisicao.usuario);
 
-  if (!numericPayer || !numericReceiver || numericPayer === numericReceiver) {
-    throw new AppError('Selecione pessoas diferentes para pagar e receber.');
+  const {
+    payerId: pagadorId,
+    receiverId: recebedorId,
+    amount: valor,
+    method: forma = 'PIX',
+    note: observacao,
+  } = requisicao.body;
+  const pagadorIdNumerico = Number(pagadorId);
+  const recebedorIdNumerico = Number(recebedorId);
+  const valorNumerico = Number(valor);
+
+  if (!pagadorIdNumerico || !recebedorIdNumerico || pagadorIdNumerico === recebedorIdNumerico) {
+    throw new ErroAplicacao('Selecione pessoas diferentes para pagar e receber.');
   }
-  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-    throw new AppError('Informe um valor de pagamento válido.');
+  if (!Number.isFinite(valorNumerico) || valorNumerico <= 0) {
+    throw new ErroAplicacao('Informe um valor de pagamento válido.');
   }
-  if (request.user.role !== 'ADMIN' && numericPayer !== request.user.id) {
-    throw new AppError('Você só pode informar pagamentos feitos por você.', 403);
+  if (requisicao.usuario.role !== 'ADMIN' && pagadorIdNumerico !== requisicao.usuario.id) {
+    throw new ErroAplicacao('Você só pode informar pagamentos feitos por você.', 403);
   }
 
-  const memberCount = await prisma.groupMember.count({
-    where: { groupId, userId: { in: [numericPayer, numericReceiver] } },
+  const quantidadeMembros = await prisma.groupMember.count({
+    where: {
+      groupId: grupoId,
+      userId: { in: [pagadorIdNumerico, recebedorIdNumerico] },
+    },
   });
-  if (memberCount !== 2) throw new AppError('As duas pessoas precisam participar do grupo.');
+  if (quantidadeMembros !== 2) {
+    throw new ErroAplicacao('As duas pessoas precisam participar do grupo.');
+  }
 
-  const settlement = await prisma.settlement.create({
+  const acerto = await prisma.settlement.create({
     data: {
-      groupId,
-      payerId: numericPayer,
-      receiverId: numericReceiver,
-      createdById: request.user.id,
-      amount: numericAmount.toFixed(2),
-      method,
-      note: note?.trim() || null,
+      groupId: grupoId,
+      payerId: pagadorIdNumerico,
+      receiverId: recebedorIdNumerico,
+      createdById: requisicao.usuario.id,
+      amount: valorNumerico.toFixed(2),
+      method: forma,
+      note: observacao?.trim() || null,
     },
     include: {
       payer: { select: { id: true, name: true } },
       receiver: { select: { id: true, name: true } },
     },
   });
-  response.status(201).json(settlement);
+  resposta.status(201).json(acerto);
 }
 
-export async function updateSettlementStatus(request, response) {
-  const id = Number(request.params.id);
-  const { status } = request.body;
+export async function atualizarStatusAcerto(requisicao, resposta) {
+  const acertoId = Number(requisicao.params.id);
+  const { status } = requisicao.body;
+
   if (!['PENDING', 'CONFIRMED', 'REJECTED'].includes(status)) {
-    throw new AppError('Status de pagamento inválido.');
+    throw new ErroAplicacao('Status de pagamento inválido.');
   }
 
-  const settlement = await prisma.settlement.findUnique({ where: { id } });
-  if (!settlement) throw new AppError('Acerto não encontrado.', 404);
-  await ensureGroupAccess(settlement.groupId, request.user);
+  const acerto = await prisma.settlement.findUnique({ where: { id: acertoId } });
+  if (!acerto) throw new ErroAplicacao('Acerto não encontrado.', 404);
+  await garantirAcessoGrupo(acerto.groupId, requisicao.usuario);
 
-  if (request.user.role !== 'ADMIN' && settlement.receiverId !== request.user.id) {
-    throw new AppError('Somente quem recebe pode confirmar ou recusar o pagamento.', 403);
+  const usuarioPodeConfirmar = requisicao.usuario.role === 'ADMIN'
+    || acerto.receiverId === requisicao.usuario.id;
+  if (!usuarioPodeConfirmar) {
+    throw new ErroAplicacao('Somente quem recebe pode confirmar ou recusar o pagamento.', 403);
   }
 
-  const updated = await prisma.settlement.update({
-    where: { id },
+  const acertoAtualizado = await prisma.settlement.update({
+    where: { id: acertoId },
     data: {
       status,
       confirmedAt: status === 'CONFIRMED' ? new Date() : null,
     },
   });
-  response.json(updated);
+  resposta.json(acertoAtualizado);
 }

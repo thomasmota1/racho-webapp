@@ -1,41 +1,41 @@
 import prisma from '../lib/prisma.js';
-import { AppError } from '../utils/AppError.js';
+import { ErroAplicacao } from '../utils/AppError.js';
 
-export async function getMembership(groupId, userId) {
+export async function buscarParticipacao(grupoId, usuarioId) {
   return prisma.groupMember.findUnique({
-    where: { groupId_userId: { groupId, userId } },
+    where: { groupId_userId: { groupId: grupoId, userId: usuarioId } },
   });
 }
 
-export async function ensureGroupAccess(groupId, user) {
-  const group = await prisma.group.findUnique({ where: { id: groupId } });
+export async function garantirAcessoGrupo(grupoId, usuario) {
+  const grupo = await prisma.group.findUnique({ where: { id: grupoId } });
 
-  if (!group) {
-    throw new AppError('Grupo não encontrado.', 404);
+  if (!grupo) {
+    throw new ErroAplicacao('Grupo não encontrado.', 404);
   }
 
-  if (user.role === 'ADMIN') {
-    return group;
+  if (usuario.role === 'ADMIN') {
+    return grupo;
   }
 
-  const membership = await getMembership(groupId, user.id);
-  if (!membership) {
-    throw new AppError('Você não participa deste grupo.', 403);
+  const participacao = await buscarParticipacao(grupoId, usuario.id);
+  if (!participacao) {
+    throw new ErroAplicacao('Você não participa deste grupo.', 403);
   }
 
-  return group;
+  return grupo;
 }
 
-export async function ensureGroupManager(groupId, user) {
-  const group = await prisma.group.findUnique({ where: { id: groupId } });
+export async function garantirGerenciaGrupo(grupoId, usuario) {
+  const grupo = await prisma.group.findUnique({ where: { id: grupoId } });
 
-  if (!group) {
-    throw new AppError('Grupo não encontrado.', 404);
+  if (!grupo) {
+    throw new ErroAplicacao('Grupo não encontrado.', 404);
   }
 
-  if (user.role !== 'ADMIN' && group.createdById !== user.id) {
-    throw new AppError('Somente o criador do grupo ou o administrador pode fazer isso.', 403);
+  if (usuario.role !== 'ADMIN' && grupo.createdById !== usuario.id) {
+    throw new ErroAplicacao('Somente o criador do grupo ou o administrador pode fazer isso.', 403);
   }
 
-  return group;
+  return grupo;
 }

@@ -1,11 +1,13 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext.jsx';
-import { Loading } from './Feedback.jsx';
+import { usarAutenticacao } from '../contexts/AuthContext.jsx';
+import { Carregamento } from './Feedback.jsx';
 
-export function ProtectedRoute({ children, admin = false }) {
-  const { user, loading } = useAuth();
-  if (loading) return <Loading label="Abrindo sua conta..." />;
-  if (!user) return <Navigate to="/login" replace />;
-  if (admin && user.role !== 'ADMIN') return <Navigate to="/" replace />;
+export function RotaProtegida({ children, somenteAdministrador = false }) {
+  const { usuario, carregando } = usarAutenticacao();
+
+  if (carregando) return <Carregamento texto="Abrindo sua conta..." />;
+  if (!usuario) return <Navigate to="/login" replace />;
+  if (somenteAdministrador && usuario.role !== 'ADMIN') return <Navigate to="/" replace />;
+
   return children;
 }

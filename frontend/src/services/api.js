@@ -1,22 +1,22 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
+const URL_API = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
 
-export async function api(path, options = {}) {
+export async function requisicaoApi(caminho, opcoes = {}) {
   const token = localStorage.getItem('racho_token');
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
+  const resposta = await fetch(`${URL_API}${caminho}`, {
+    ...opcoes,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
+      ...opcoes.headers,
     },
   });
 
-  if (response.status === 204) return null;
-  const data = await response.json().catch(() => ({}));
+  if (resposta.status === 204) return null;
+  const dados = await resposta.json().catch(() => ({}));
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Não foi possível concluir a operação.');
+  if (!resposta.ok) {
+    throw new Error(dados.message || 'Não foi possível concluir a operação.');
   }
 
-  return data;
+  return dados;
 }

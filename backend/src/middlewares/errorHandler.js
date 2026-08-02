@@ -1,26 +1,29 @@
-import { AppError } from '../utils/AppError.js';
+import { ErroAplicacao } from '../utils/AppError.js';
 
-export function notFound(request, _response, next) {
-  next(new AppError(`Rota não encontrada: ${request.method} ${request.originalUrl}`, 404));
+export function rotaNaoEncontrada(requisicao, _resposta, proximo) {
+  proximo(new ErroAplicacao(
+    `Rota não encontrada: ${requisicao.method} ${requisicao.originalUrl}`,
+    404,
+  ));
 }
 
-export function errorHandler(error, _request, response, _next) {
-  if (error.code === 'P2002') {
-    response.status(409).json({ message: 'Já existe um registro com essas informações.' });
+export function tratarErro(erro, _requisicao, resposta, _proximo) {
+  if (erro.code === 'P2002') {
+    resposta.status(409).json({ message: 'Já existe um registro com essas informações.' });
     return;
   }
 
-  if (error.code === 'P2025') {
-    response.status(404).json({ message: 'Registro não encontrado.' });
+  if (erro.code === 'P2025') {
+    resposta.status(404).json({ message: 'Registro não encontrado.' });
     return;
   }
 
-  const statusCode = error.statusCode || 500;
-  const message = error.message || 'Erro interno do servidor.';
+  const codigoHttp = erro.codigoHttp || 500;
+  const mensagem = erro.message || 'Erro interno do servidor.';
 
-  if (statusCode >= 500) {
-    console.error(error);
+  if (codigoHttp >= 500) {
+    console.error(erro);
   }
 
-  response.status(statusCode).json({ message });
+  resposta.status(codigoHttp).json({ message: mensagem });
 }

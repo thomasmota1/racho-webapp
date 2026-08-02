@@ -1,9 +1,9 @@
 import prisma from '../lib/prisma.js';
-import { AppError } from '../utils/AppError.js';
-import { calculateGroupBalances, suggestSettlements } from '../services/balanceService.js';
-import { ensureGroupAccess, ensureGroupManager } from '../services/permissionService.js';
+import { ErroAplicacao } from '../utils/AppError.js';
+import { calcularSaldosGrupo, sugerirAcertos } from '../services/balanceService.js';
+import { garantirAcessoGrupo, garantirGerenciaGrupo } from '../services/permissionService.js';
 
-const groupInclude = {
+const INCLUSAO_COMPLETA_GRUPO = {
   createdBy: { select: { id: true, name: true, email: true } },
   members: {
     include: { user: { select: { id: true, name: true, email: true } } },
@@ -28,146 +28,189 @@ const groupInclude = {
   },
 };
 
-function enrichGroup(group) {
-  const balances = calculateGroupBalances(group);
+function arredondarValor(valor) {
+  return Math.round(valor * 100) / 100;
+}
+
+function enriquecerGrupo(grupo) {
+  const saldos = calcularSaldosGrupo(grupo);
+  const totalDespesas = grupo.expenses.reduce(
+    (total, despesa) => total + Number(despesa.amount),
+    0,
+  );
+
   return {
-    ...group,
-    totalExpenses: group.expenses.reduce((total, expense) => total + Number(expense.amount), 0),
-    balances,
-    suggestions: suggestSettlements(balances),
+    ...grupo,
+    totalExpenses: totalDespesas,
+    balances: saldos,
+    suggestions: sugerirAcertos(saldos),
   };
 }
 
-export async function dashboard(request, response) {
-  const groups = await prisma.group.findMany({
-    where: request.user.role === 'ADMIN'
+export async function obterDadosPainel(requisicao, resposta) {
+  const grupos = await prisma.group.findMany({
+    where: requisicao.usuario.role === 'ADMIN'
       ? {}
-      : { members: { some: { userId: request.user.id } } },
-    include: groupInclude,
+      : { members: { some: { userId: requisicao.usuario.id } } },
+    include: INCLUSAO_COMPLETA_GRUPO,
     orderBy: { updatedAt: 'desc' },
   });
 
-  let receives = 0;
-  let owes = 0;
-  let totalExpenses = 0;
-  let pendingSettlements = 0;
+  let totalAReceber = 0;
+  let totalADever = 0;
+  let totalDespesas = 0;
+  let acertosPendentes = 0;
 
-  const cards = groups.map((group) => {
-    const enriched = enrichGroup(group);
-    const ownBalance = enriched.balances.find((item) => item.user.id === request.user.id)?.balance ?? 0;
-    if (ownBalance > 0) receives += ownBalance;
-    if (ownBalance < 0) owes += Math.abs(ownBalance);
-    totalExpenses += enriched.totalExpenses;
-    pendingSettlements += group.settlements.filter((settlement) => (
-      settlement.status === 'PENDING'
-      && (settlement.payerId === request.user.id || settlement.receiverId === request.user.id)
+  const cartoesGrupos = grupos.map((grupo) => {
+    const grupoCompleto = enriquecerGrupo(grupo);
+    const saldoUsuario = grupoCompleto.balances.find(
+      (item) => item.user.id === requisicao.usuario.id,
+    )?.balance ?? 0;
+
+    if (saldoUsuario > 0) totalAReceber += saldoUsuario;
+    if (saldoUsuario < 0) totalADever += Math.abs(saldoUsuario);
+    totalDespesas += grupoCompleto.totalExpenses;
+    acertosPendentes += grupo.settlements.filter((acerto) => (
+      acerto.status === 'PENDING'
+      && (acerto.payerId === requisicao.usuario.id
+        || acerto.receiverId === requisicao.usuario.id)
     )).length;
 
     return {
-      id: group.id,
-      name: group.name,
-      description: group.description,
-      coverEmoji: group.coverEmoji,
-      memberCount: group.members.length,
-      expenseCount: group.expenses.length,
-      totalExpenses: enriched.totalExpenses,
-      ownBalance,
-      updatedAt: group.updatedAt,
+      id: grupo.id,
+      name: grupo.name,
+      description: grupo.description,
+      coverEmoji: grupo.coverEmoji,
+      memberCount: grupo.members.length,
+      expenseCount: grupo.expenses.length,
+      totalExpenses: grupoCompleto.totalExpenses,
+      ownBalance: saldoUsuario,
+      updatedAt: grupo.updatedAt,
     };
   });
 
-  response.json({
+  resposta.json({
     summary: {
-      receives: Math.round(receives * 100) / 100,
-      owes: Math.round(owes * 100) / 100,
-      net: Math.round((receives - owes) * 100) / 100,
-      totalExpenses: Math.round(totalExpenses * 100) / 100,
-      groupCount: groups.length,
-      pendingSettlements,
+      receives: arredondarValor(totalAReceber),
+      owes: arredondarValor(totalADever),
+      net: arredondarValor(totalAReceber - totalADever),
+      totalExpenses: arredondarValor(totalDespesas),
+      groupCount: grupos.length,
+      pendingSettlements: acertosPendentes,
     },
-    groups: cards,
+    groups: cartoesGrupos,
   });
 }
 
-export async function getGroup(request, response) {
-  const id = Number(request.params.id);
-  await ensureGroupAccess(id, request.user);
-  const group = await prisma.group.findUnique({ where: { id }, include: groupInclude });
-  response.json(enrichGroup(group));
+export async function obterGrupo(requisicao, resposta) {
+  const grupoId = Number(requisicao.params.id);
+  await garantirAcessoGrupo(grupoId, requisicao.usuario);
+
+  const grupo = await prisma.group.findUnique({
+    where: { id: grupoId },
+    include: INCLUSAO_COMPLETA_GRUPO,
+  });
+  resposta.json(enriquecerGrupo(grupo));
 }
 
-export async function createGroup(request, response) {
-  const { name, description, coverEmoji = '🎉' } = request.body;
-  if (!name?.trim()) throw new AppError('Informe o nome do grupo.');
+export async function criarGrupo(requisicao, resposta) {
+  const {
+    name: nome,
+    description: descricao,
+    coverEmoji: emoji = '🎉',
+  } = requisicao.body;
 
-  const group = await prisma.group.create({
+  if (!nome?.trim()) throw new ErroAplicacao('Informe o nome do grupo.');
+
+  const grupo = await prisma.group.create({
     data: {
-      name: name.trim(),
-      description: description?.trim() || null,
-      coverEmoji,
-      createdById: request.user.id,
-      members: { create: { userId: request.user.id } },
+      name: nome.trim(),
+      description: descricao?.trim() || null,
+      coverEmoji: emoji,
+      createdById: requisicao.usuario.id,
+      members: { create: { userId: requisicao.usuario.id } },
     },
-    include: groupInclude,
+    include: INCLUSAO_COMPLETA_GRUPO,
   });
 
-  response.status(201).json(enrichGroup(group));
+  resposta.status(201).json(enriquecerGrupo(grupo));
 }
 
-export async function updateGroup(request, response) {
-  const id = Number(request.params.id);
-  await ensureGroupManager(id, request.user);
-  const { name, description, coverEmoji } = request.body;
-  const data = {};
-  if (name !== undefined) {
-    if (!name.trim()) throw new AppError('O nome do grupo não pode ficar vazio.');
-    data.name = name.trim();
+export async function atualizarGrupo(requisicao, resposta) {
+  const grupoId = Number(requisicao.params.id);
+  await garantirGerenciaGrupo(grupoId, requisicao.usuario);
+
+  const {
+    name: nome,
+    description: descricao,
+    coverEmoji: emoji,
+  } = requisicao.body;
+  const dadosAtualizacao = {};
+
+  if (nome !== undefined) {
+    if (!nome.trim()) throw new ErroAplicacao('O nome do grupo não pode ficar vazio.');
+    dadosAtualizacao.name = nome.trim();
   }
-  if (description !== undefined) data.description = description?.trim() || null;
-  if (coverEmoji !== undefined) data.coverEmoji = coverEmoji;
-  const group = await prisma.group.update({ where: { id }, data, include: groupInclude });
-  response.json(enrichGroup(group));
+  if (descricao !== undefined) dadosAtualizacao.description = descricao?.trim() || null;
+  if (emoji !== undefined) dadosAtualizacao.coverEmoji = emoji;
+
+  const grupoAtualizado = await prisma.group.update({
+    where: { id: grupoId },
+    data: dadosAtualizacao,
+    include: INCLUSAO_COMPLETA_GRUPO,
+  });
+  resposta.json(enriquecerGrupo(grupoAtualizado));
 }
 
-export async function deleteGroup(request, response) {
-  const id = Number(request.params.id);
-  await ensureGroupManager(id, request.user);
-  await prisma.group.delete({ where: { id } });
-  response.status(204).send();
+export async function excluirGrupo(requisicao, resposta) {
+  const grupoId = Number(requisicao.params.id);
+  await garantirGerenciaGrupo(grupoId, requisicao.usuario);
+  await prisma.group.delete({ where: { id: grupoId } });
+  resposta.status(204).send();
 }
 
-export async function addMember(request, response) {
-  const groupId = Number(request.params.id);
-  await ensureGroupManager(groupId, request.user);
-  const email = request.body.email?.trim().toLowerCase();
-  if (!email) throw new AppError('Informe o e-mail da pessoa.');
+export async function adicionarMembro(requisicao, resposta) {
+  const grupoId = Number(requisicao.params.id);
+  await garantirGerenciaGrupo(grupoId, requisicao.usuario);
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.active) throw new AppError('Usuário não encontrado ou desativado.', 404);
+  const email = requisicao.body.email?.trim().toLowerCase();
+  if (!email) throw new ErroAplicacao('Informe o e-mail da pessoa.');
 
-  const membership = await prisma.groupMember.create({ data: { groupId, userId: user.id } });
-  response.status(201).json(membership);
-}
-
-export async function removeMember(request, response) {
-  const groupId = Number(request.params.id);
-  const userId = Number(request.params.userId);
-  const group = await ensureGroupManager(groupId, request.user);
-
-  if (group.createdById === userId) {
-    throw new AppError('O criador não pode ser removido do próprio grupo.');
+  const usuario = await prisma.user.findUnique({ where: { email } });
+  if (!usuario || !usuario.active) {
+    throw new ErroAplicacao('Usuário não encontrado ou desativado.', 404);
   }
 
-  const hasData = await prisma.expense.count({
+  const participacao = await prisma.groupMember.create({
+    data: { groupId: grupoId, userId: usuario.id },
+  });
+  resposta.status(201).json(participacao);
+}
+
+export async function removerMembro(requisicao, resposta) {
+  const grupoId = Number(requisicao.params.id);
+  const usuarioId = Number(requisicao.params.userId);
+  const grupo = await garantirGerenciaGrupo(grupoId, requisicao.usuario);
+
+  if (grupo.createdById === usuarioId) {
+    throw new ErroAplicacao('O criador não pode ser removido do próprio grupo.');
+  }
+
+  const quantidadeDespesas = await prisma.expense.count({
     where: {
-      groupId,
-      OR: [{ payerId: userId }, { shares: { some: { userId } } }],
+      groupId: grupoId,
+      OR: [{ payerId: usuarioId }, { shares: { some: { userId: usuarioId } } }],
     },
   });
-  if (hasData > 0) {
-    throw new AppError('Essa pessoa participa de despesas do grupo e não pode ser removida.', 409);
+  if (quantidadeDespesas > 0) {
+    throw new ErroAplicacao(
+      'Essa pessoa participa de despesas do grupo e não pode ser removida.',
+      409,
+    );
   }
 
-  await prisma.groupMember.delete({ where: { groupId_userId: { groupId, userId } } });
-  response.status(204).send();
+  await prisma.groupMember.delete({
+    where: { groupId_userId: { groupId: grupoId, userId: usuarioId } },
+  });
+  resposta.status(204).send();
 }

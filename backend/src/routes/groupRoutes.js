@@ -1,22 +1,22 @@
 import { Router } from 'express';
 import {
-  addMember, createGroup, dashboard, deleteGroup, getGroup,
-  removeMember, updateGroup,
+  adicionarMembro, atualizarGrupo, criarGrupo, excluirGrupo, obterDadosPainel,
+  obterGrupo, removerMembro,
 } from '../controllers/groupController.js';
-import { createExpense } from '../controllers/expenseController.js';
-import { createSettlement } from '../controllers/settlementController.js';
-import { authenticate } from '../middlewares/auth.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import { criarDespesa } from '../controllers/expenseController.js';
+import { criarAcerto } from '../controllers/settlementController.js';
+import { autenticar } from '../middlewares/auth.js';
+import { tratarErrosAssincronos } from '../utils/asyncHandler.js';
 
-const router = Router();
-router.use(authenticate);
-router.get('/dashboard', asyncHandler(dashboard));
-router.post('/', asyncHandler(createGroup));
-router.get('/:id', asyncHandler(getGroup));
-router.patch('/:id', asyncHandler(updateGroup));
-router.delete('/:id', asyncHandler(deleteGroup));
-router.post('/:id/members', asyncHandler(addMember));
-router.delete('/:id/members/:userId', asyncHandler(removeMember));
-router.post('/:groupId/expenses', asyncHandler(createExpense));
-router.post('/:groupId/settlements', asyncHandler(createSettlement));
-export default router;
+const rotasGrupos = Router();
+rotasGrupos.use(autenticar);
+rotasGrupos.get('/dashboard', tratarErrosAssincronos(obterDadosPainel));
+rotasGrupos.post('/', tratarErrosAssincronos(criarGrupo));
+rotasGrupos.get('/:id', tratarErrosAssincronos(obterGrupo));
+rotasGrupos.patch('/:id', tratarErrosAssincronos(atualizarGrupo));
+rotasGrupos.delete('/:id', tratarErrosAssincronos(excluirGrupo));
+rotasGrupos.post('/:id/members', tratarErrosAssincronos(adicionarMembro));
+rotasGrupos.delete('/:id/members/:userId', tratarErrosAssincronos(removerMembro));
+rotasGrupos.post('/:groupId/expenses', tratarErrosAssincronos(criarDespesa));
+rotasGrupos.post('/:groupId/settlements', tratarErrosAssincronos(criarAcerto));
+export default rotasGrupos;

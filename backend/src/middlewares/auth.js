@@ -1,38 +1,38 @@
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
-import { AppError } from '../utils/AppError.js';
+import { ErroAplicacao } from '../utils/AppError.js';
 
-export async function authenticate(request, _response, next) {
+export async function autenticar(requisicao, _resposta, proximo) {
   try {
-    const header = request.headers.authorization;
+    const cabecalho = requisicao.headers.authorization;
 
-    if (!header?.startsWith('Bearer ')) {
-      throw new AppError('Token de autenticação não informado.', 401);
+    if (!cabecalho?.startsWith('Bearer ')) {
+      throw new ErroAplicacao('Token de autenticação não informado.', 401);
     }
 
-    const token = header.slice(7);
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    const token = cabecalho.slice(7);
+    const dadosToken = jwt.verify(token, process.env.JWT_SECRET);
+    const usuario = await prisma.user.findUnique({ where: { id: dadosToken.userId } });
 
-    if (!user || !user.active) {
-      throw new AppError('Usuário não encontrado ou desativado.', 401);
+    if (!usuario || !usuario.active) {
+      throw new ErroAplicacao('Usuário não encontrado ou desativado.', 401);
     }
 
-    request.user = user;
-    next();
-  } catch (error) {
-    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-      next(new AppError('Sessão inválida ou expirada.', 401));
+    requisicao.usuario = usuario;
+    proximo();
+  } catch (erro) {
+    if (erro.name === 'JsonWebTokenError' || erro.name === 'TokenExpiredError') {
+      proximo(new ErroAplicacao('Sessão inválida ou expirada.', 401));
       return;
     }
-    next(error);
+    proximo(erro);
   }
 }
 
-export function requireAdmin(request, _response, next) {
-  if (request.user.role !== 'ADMIN') {
-    next(new AppError('Acesso restrito ao administrador.', 403));
+export function exigirAdministrador(requisicao, _resposta, proximo) {
+  if (requisicao.usuario.role !== 'ADMIN') {
+    proximo(new ErroAplicacao('Acesso restrito ao administrador.', 403));
     return;
   }
-  next();
+  proximo();
 }

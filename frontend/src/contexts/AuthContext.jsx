@@ -1,61 +1,70 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../services/api.js';
+import { requisicaoApi } from '../services/api.js';
 
-const AuthContext = createContext(null);
+const ContextoAutenticacao = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+export function ProvedorAutenticacao({ children }) {
+  const [usuario, setUsuario] = useState(null);
+  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('racho_token');
     if (!token) {
-      setLoading(false);
+      setCarregando(false);
       return;
     }
 
-    api('/auth/me')
-      .then(setUser)
+    requisicaoApi('/auth/me')
+      .then(setUsuario)
       .catch(() => localStorage.removeItem('racho_token'))
-      .finally(() => setLoading(false));
+      .finally(() => setCarregando(false));
   }, []);
 
-  async function login(email, password) {
-    const data = await api('/auth/login', {
+  async function entrar(email, senha) {
+    const dados = await requisicaoApi('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password: senha }),
     });
-    localStorage.setItem('racho_token', data.token);
-    setUser(data.user);
-    return data.user;
+    localStorage.setItem('racho_token', dados.token);
+    setUsuario(dados.user);
+    return dados.user;
   }
 
-  async function register(name, email, password) {
-    const data = await api('/auth/register', {
+  async function cadastrar(nome, email, senha) {
+    const dados = await requisicaoApi('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name: nome, email, password: senha }),
     });
-    localStorage.setItem('racho_token', data.token);
-    setUser(data.user);
+    localStorage.setItem('racho_token', dados.token);
+    setUsuario(dados.user);
   }
 
-  function logout() {
+  function sair() {
     localStorage.removeItem('racho_token');
-    setUser(null);
+    setUsuario(null);
   }
 
-  async function refreshUser() {
-    const data = await api('/auth/me');
-    setUser(data);
+  async function atualizarUsuario() {
+    const dados = await requisicaoApi('/auth/me');
+    setUsuario(dados);
   }
 
-  const value = useMemo(() => ({
-    user, loading, login, register, logout, refreshUser,
-  }), [user, loading]);
+  const valorContexto = useMemo(() => ({
+    usuario,
+    carregando,
+    entrar,
+    cadastrar,
+    sair,
+    atualizarUsuario,
+  }), [usuario, carregando]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <ContextoAutenticacao.Provider value={valorContexto}>
+      {children}
+    </ContextoAutenticacao.Provider>
+  );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
+export function usarAutenticacao() {
+  return useContext(ContextoAutenticacao);
 }

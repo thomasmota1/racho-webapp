@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function main() {
+async function preencherBanco() {
   await prisma.expenseShare.deleteMany();
   await prisma.settlement.deleteMany();
   await prisma.expense.deleteMany();
@@ -13,17 +13,17 @@ async function main() {
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
 
-  const passwordHash = await bcrypt.hash('123456', 10);
-  const adminHash = await bcrypt.hash('admin123', 10);
+  const senhaUsuariosHash = await bcrypt.hash('123456', 10);
+  const senhaAdministradorHash = await bcrypt.hash('admin123', 10);
 
-  const [admin, ana, bruno, carla] = await Promise.all([
-    prisma.user.create({ data: { name: 'Administrador', email: 'admin@racho.com', passwordHash: adminHash, role: 'ADMIN' } }),
-    prisma.user.create({ data: { name: 'Ana Souza', email: 'ana@racho.com', passwordHash } }),
-    prisma.user.create({ data: { name: 'Bruno Lima', email: 'bruno@racho.com', passwordHash } }),
-    prisma.user.create({ data: { name: 'Carla Mendes', email: 'carla@racho.com', passwordHash } }),
+  const [, ana, bruno, carla] = await Promise.all([
+    prisma.user.create({ data: { name: 'Administrador', email: 'admin@racho.com', passwordHash: senhaAdministradorHash, role: 'ADMIN' } }),
+    prisma.user.create({ data: { name: 'Ana Souza', email: 'ana@racho.com', passwordHash: senhaUsuariosHash } }),
+    prisma.user.create({ data: { name: 'Bruno Lima', email: 'bruno@racho.com', passwordHash: senhaUsuariosHash } }),
+    prisma.user.create({ data: { name: 'Carla Mendes', email: 'carla@racho.com', passwordHash: senhaUsuariosHash } }),
   ]);
 
-  const categories = await Promise.all([
+  const categorias = await Promise.all([
     prisma.category.create({ data: { name: 'Alimentação', icon: '🍔', color: '#F97316' } }),
     prisma.category.create({ data: { name: 'Transporte', icon: '🚗', color: '#3B82F6' } }),
     prisma.category.create({ data: { name: 'Hospedagem', icon: '🏠', color: '#8B5CF6' } }),
@@ -32,7 +32,7 @@ async function main() {
     prisma.category.create({ data: { name: 'Outros', icon: '🧾', color: '#64748B' } }),
   ]);
 
-  const trip = await prisma.group.create({
+  const viagem = await prisma.group.create({
     data: {
       name: 'Fim de semana em Caldas',
       description: 'Hospedagem, estrada, comida e passeios da viagem.',
@@ -42,7 +42,7 @@ async function main() {
     },
   });
 
-  const barbecue = await prisma.group.create({
+  const churrasco = await prisma.group.create({
     data: {
       name: 'Churrasco da turma',
       description: 'Despesas do churrasco de encerramento do semestre.',
@@ -52,16 +52,16 @@ async function main() {
     },
   });
 
-  const lodging = await prisma.expense.create({
+  await prisma.expense.create({
     data: {
-      groupId: trip.id,
+      groupId: viagem.id,
       title: 'Casa de temporada',
       description: 'Duas diárias para o grupo.',
       amount: '600.00',
       date: new Date('2026-07-04T12:00:00'),
       payerId: ana.id,
       createdById: ana.id,
-      categoryId: categories[2].id,
+      categoryId: categorias[2].id,
       shares: { create: [
         { userId: ana.id, amount: '200.00' },
         { userId: bruno.id, amount: '200.00' },
@@ -72,13 +72,13 @@ async function main() {
 
   await prisma.expense.create({
     data: {
-      groupId: trip.id,
+      groupId: viagem.id,
       title: 'Combustível',
       amount: '210.00',
       date: new Date('2026-07-05T12:00:00'),
       payerId: bruno.id,
       createdById: bruno.id,
-      categoryId: categories[1].id,
+      categoryId: categorias[1].id,
       shares: { create: [
         { userId: ana.id, amount: '70.00' },
         { userId: bruno.id, amount: '70.00' },
@@ -89,13 +89,13 @@ async function main() {
 
   await prisma.expense.create({
     data: {
-      groupId: barbecue.id,
+      groupId: churrasco.id,
       title: 'Carnes e acompanhamentos',
       amount: '270.00',
       date: new Date('2026-07-11T12:00:00'),
       payerId: carla.id,
       createdById: carla.id,
-      categoryId: categories[0].id,
+      categoryId: categorias[0].id,
       shares: { create: [
         { userId: ana.id, amount: '90.00' },
         { userId: bruno.id, amount: '90.00' },
@@ -106,7 +106,7 @@ async function main() {
 
   await prisma.settlement.create({
     data: {
-      groupId: trip.id,
+      groupId: viagem.id,
       payerId: carla.id,
       receiverId: ana.id,
       createdById: carla.id,
@@ -123,4 +123,4 @@ async function main() {
   console.log('Usuários: ana@racho.com, bruno@racho.com, carla@racho.com / 123456');
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect());
+preencherBanco().catch(console.error).finally(() => prisma.$disconnect());

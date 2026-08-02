@@ -1,15 +1,14 @@
 import { Router } from 'express';
 import {
-  listAllGroups,
-  listUsers, overview, updateUser,
+  atualizarUsuario, listarGrupos, listarUsuarios, obterResumo,
 } from '../controllers/adminController.js';
-import { authenticate, requireAdmin } from '../middlewares/auth.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import { autenticar, exigirAdministrador } from '../middlewares/auth.js';
+import { tratarErrosAssincronos } from '../utils/asyncHandler.js';
 
-const router = Router();
-router.use(authenticate, requireAdmin);
-router.get('/overview', asyncHandler(overview));
-router.get('/users', asyncHandler(listUsers));
-router.patch('/users/:id', asyncHandler(updateUser));
-router.get('/groups', asyncHandler(listAllGroups));
-export default router;
+const rotasAdministracao = Router();
+rotasAdministracao.use(autenticar, exigirAdministrador);
+rotasAdministracao.get('/overview', tratarErrosAssincronos(obterResumo));
+rotasAdministracao.get('/users', tratarErrosAssincronos(listarUsuarios));
+rotasAdministracao.patch('/users/:id', tratarErrosAssincronos(atualizarUsuario));
+rotasAdministracao.get('/groups', tratarErrosAssincronos(listarGrupos));
+export default rotasAdministracao;

@@ -1,91 +1,91 @@
-function roundMoney(value) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
+function arredondarValor(valor) {
+  return Math.round((valor + Number.EPSILON) * 100) / 100;
 }
 
-export function calculateGroupBalances(group) {
-  const balances = new Map();
+export function calcularSaldosGrupo(grupo) {
+  const saldos = new Map();
 
-  for (const member of group.members) {
-    balances.set(member.user.id, {
-      user: member.user,
+  for (const membro of grupo.members) {
+    saldos.set(membro.user.id, {
+      user: membro.user,
       balance: 0,
       paid: 0,
       owed: 0,
     });
   }
 
-  for (const expense of group.expenses) {
-    const amount = Number(expense.amount);
-    const payer = balances.get(expense.payerId);
+  for (const despesa of grupo.expenses) {
+    const valor = Number(despesa.amount);
+    const pagador = saldos.get(despesa.payerId);
 
-    if (payer) {
-      payer.paid += amount;
-      payer.balance += amount;
+    if (pagador) {
+      pagador.paid += valor;
+      pagador.balance += valor;
     }
 
-    for (const share of expense.shares) {
-      const member = balances.get(share.userId);
-      const shareAmount = Number(share.amount);
-      if (member) {
-        member.owed += shareAmount;
-        member.balance -= shareAmount;
+    for (const parte of despesa.shares) {
+      const participante = saldos.get(parte.userId);
+      const valorParte = Number(parte.amount);
+      if (participante) {
+        participante.owed += valorParte;
+        participante.balance -= valorParte;
       }
     }
   }
 
-  for (const settlement of group.settlements) {
-    if (settlement.status !== 'CONFIRMED') continue;
+  for (const acerto of grupo.settlements) {
+    if (acerto.status !== 'CONFIRMED') continue;
 
-    const amount = Number(settlement.amount);
-    const payer = balances.get(settlement.payerId);
-    const receiver = balances.get(settlement.receiverId);
+    const valor = Number(acerto.amount);
+    const pagador = saldos.get(acerto.payerId);
+    const recebedor = saldos.get(acerto.receiverId);
 
-    if (payer) payer.balance += amount;
-    if (receiver) receiver.balance -= amount;
+    if (pagador) pagador.balance += valor;
+    if (recebedor) recebedor.balance -= valor;
   }
 
-  return [...balances.values()].map((item) => ({
+  return [...saldos.values()].map((item) => ({
     ...item,
-    paid: roundMoney(item.paid),
-    owed: roundMoney(item.owed),
-    balance: roundMoney(item.balance),
+    paid: arredondarValor(item.paid),
+    owed: arredondarValor(item.owed),
+    balance: arredondarValor(item.balance),
   }));
 }
 
-export function suggestSettlements(balances) {
-  const creditors = balances
+export function sugerirAcertos(saldos) {
+  const credores = saldos
     .filter((item) => item.balance > 0.009)
-    .map((item) => ({ ...item, remaining: item.balance }))
-    .sort((a, b) => b.remaining - a.remaining);
+    .map((item) => ({ ...item, saldoRestante: item.balance }))
+    .sort((primeiro, segundo) => segundo.saldoRestante - primeiro.saldoRestante);
 
-  const debtors = balances
+  const devedores = saldos
     .filter((item) => item.balance < -0.009)
-    .map((item) => ({ ...item, remaining: Math.abs(item.balance) }))
-    .sort((a, b) => b.remaining - a.remaining);
+    .map((item) => ({ ...item, saldoRestante: Math.abs(item.balance) }))
+    .sort((primeiro, segundo) => segundo.saldoRestante - primeiro.saldoRestante);
 
-  const suggestions = [];
-  let debtorIndex = 0;
-  let creditorIndex = 0;
+  const sugestoes = [];
+  let indiceDevedor = 0;
+  let indiceCredor = 0;
 
-  while (debtorIndex < debtors.length && creditorIndex < creditors.length) {
-    const debtor = debtors[debtorIndex];
-    const creditor = creditors[creditorIndex];
-    const amount = roundMoney(Math.min(debtor.remaining, creditor.remaining));
+  while (indiceDevedor < devedores.length && indiceCredor < credores.length) {
+    const devedor = devedores[indiceDevedor];
+    const credor = credores[indiceCredor];
+    const valor = arredondarValor(Math.min(devedor.saldoRestante, credor.saldoRestante));
 
-    if (amount > 0) {
-      suggestions.push({
-        payer: debtor.user,
-        receiver: creditor.user,
-        amount,
+    if (valor > 0) {
+      sugestoes.push({
+        payer: devedor.user,
+        receiver: credor.user,
+        amount: valor,
       });
     }
 
-    debtor.remaining = roundMoney(debtor.remaining - amount);
-    creditor.remaining = roundMoney(creditor.remaining - amount);
+    devedor.saldoRestante = arredondarValor(devedor.saldoRestante - valor);
+    credor.saldoRestante = arredondarValor(credor.saldoRestante - valor);
 
-    if (debtor.remaining <= 0.009) debtorIndex += 1;
-    if (creditor.remaining <= 0.009) creditorIndex += 1;
+    if (devedor.saldoRestante <= 0.009) indiceDevedor += 1;
+    if (credor.saldoRestante <= 0.009) indiceCredor += 1;
   }
 
-  return suggestions;
+  return sugestoes;
 }

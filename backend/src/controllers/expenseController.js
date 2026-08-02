@@ -1,141 +1,186 @@
 import prisma from '../lib/prisma.js';
-import { AppError } from '../utils/AppError.js';
-import { ensureGroupAccess } from '../services/permissionService.js';
+import { ErroAplicacao } from '../utils/AppError.js';
+import { garantirAcessoGrupo } from '../services/permissionService.js';
 
-function splitAmountEqually(amount, participantIds) {
-  const cents = Math.round(Number(amount) * 100);
-  const base = Math.floor(cents / participantIds.length);
-  let remainder = cents - base * participantIds.length;
+function dividirValorIgualmente(valor, participantesIds) {
+  const totalCentavos = Math.round(Number(valor) * 100);
+  const centavosPorPessoa = Math.floor(totalCentavos / participantesIds.length);
+  let centavosRestantes = totalCentavos - centavosPorPessoa * participantesIds.length;
 
-  return participantIds.map((userId) => {
-    const extraCent = remainder > 0 ? 1 : 0;
-    remainder -= extraCent;
-    return { userId, amount: ((base + extraCent) / 100).toFixed(2) };
+  return participantesIds.map((usuarioId) => {
+    const centavoExtra = centavosRestantes > 0 ? 1 : 0;
+    centavosRestantes -= centavoExtra;
+
+    return {
+      userId: usuarioId,
+      amount: ((centavosPorPessoa + centavoExtra) / 100).toFixed(2),
+    };
   });
 }
 
-async function validateExpenseData(groupId, { amount, payerId, categoryId, participantIds }) {
-  const numericAmount = Number(amount);
-  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-    throw new AppError('O valor da despesa deve ser maior que zero.');
+async function validarDadosDespesa(grupoId, dadosDespesa) {
+  const {
+    amount: valor,
+    payerId: pagadorId,
+    categoryId: categoriaId,
+    participantIds: participantesIds,
+  } = dadosDespesa;
+  const valorNumerico = Number(valor);
+
+  if (!Number.isFinite(valorNumerico) || valorNumerico <= 0) {
+    throw new ErroAplicacao('O valor da despesa deve ser maior que zero.');
   }
 
-  const uniqueParticipants = [...new Set((participantIds || []).map(Number))];
-  if (uniqueParticipants.length === 0) {
-    throw new AppError('Selecione pelo menos um participante.');
+  const participantesUnicos = [...new Set((participantesIds || []).map(Number))];
+  if (participantesUnicos.length === 0) {
+    throw new ErroAplicacao('Selecione pelo menos um participante.');
   }
 
-  const memberIds = await prisma.groupMember.findMany({
-    where: { groupId },
+  const membros = await prisma.groupMember.findMany({
+    where: { groupId: grupoId },
     select: { userId: true },
   });
-  const allowed = new Set(memberIds.map((item) => item.userId));
+  const membrosPermitidos = new Set(membros.map((membro) => membro.userId));
+  const pagadorParticipa = membrosPermitidos.has(Number(pagadorId));
+  const todosParticipam = participantesUnicos.every((id) => membrosPermitidos.has(id));
 
-  if (!allowed.has(Number(payerId)) || uniqueParticipants.some((id) => !allowed.has(id))) {
-    throw new AppError('O pagador e os participantes precisam pertencer ao grupo.');
+  if (!pagadorParticipa || !todosParticipam) {
+    throw new ErroAplicacao('O pagador e os participantes precisam pertencer ao grupo.');
   }
 
-  const category = await prisma.category.findUnique({ where: { id: Number(categoryId) } });
-  if (!category) throw new AppError('Categoria não encontrada.', 404);
+  const categoria = await prisma.category.findUnique({ where: { id: Number(categoriaId) } });
+  if (!categoria) throw new ErroAplicacao('Categoria não encontrada.', 404);
 
-  return { numericAmount, uniqueParticipants };
+  return { valorNumerico, participantesUnicos };
 }
 
-export async function createExpense(request, response) {
-  const groupId = Number(request.params.groupId);
-  await ensureGroupAccess(groupId, request.user);
-  const { title, description, amount, date, payerId, categoryId, participantIds } = request.body;
+function dadosRelacionadosDaDespesa() {
+  return {
+    payer: { select: { id: true, name: true } },
+    category: true,
+    shares: { include: { user: { select: { id: true, name: true } } } },
+  };
+}
 
-  if (!title?.trim()) throw new AppError('Informe o título da despesa.');
-  const { numericAmount, uniqueParticipants } = await validateExpenseData(groupId, {
-    amount, payerId, categoryId, participantIds,
+export async function criarDespesa(requisicao, resposta) {
+  const grupoId = Number(requisicao.params.groupId);
+  await garantirAcessoGrupo(grupoId, requisicao.usuario);
+
+  const {
+    title: titulo,
+    description: descricao,
+    amount: valor,
+    date: data,
+    payerId: pagadorId,
+    categoryId: categoriaId,
+    participantIds: participantesIds,
+  } = requisicao.body;
+
+  if (!titulo?.trim()) throw new ErroAplicacao('Informe o título da despesa.');
+  const { valorNumerico, participantesUnicos } = await validarDadosDespesa(grupoId, {
+    amount: valor,
+    payerId: pagadorId,
+    categoryId: categoriaId,
+    participantIds: participantesIds,
   });
 
-  const expense = await prisma.expense.create({
+  const despesa = await prisma.expense.create({
     data: {
-      groupId,
-      title: title.trim(),
-      description: description?.trim() || null,
-      amount: numericAmount.toFixed(2),
-      date: date ? new Date(`${date}T12:00:00`) : new Date(),
-      payerId: Number(payerId),
-      categoryId: Number(categoryId),
-      createdById: request.user.id,
-      shares: { create: splitAmountEqually(numericAmount, uniqueParticipants) },
+      groupId: grupoId,
+      title: titulo.trim(),
+      description: descricao?.trim() || null,
+      amount: valorNumerico.toFixed(2),
+      date: data ? new Date(`${data}T12:00:00`) : new Date(),
+      payerId: Number(pagadorId),
+      categoryId: Number(categoriaId),
+      createdById: requisicao.usuario.id,
+      shares: { create: dividirValorIgualmente(valorNumerico, participantesUnicos) },
     },
-    include: {
-      payer: { select: { id: true, name: true } },
-      category: true,
-      shares: { include: { user: { select: { id: true, name: true } } } },
-    },
+    include: dadosRelacionadosDaDespesa(),
   });
 
-  response.status(201).json(expense);
+  resposta.status(201).json(despesa);
 }
 
-export async function updateExpense(request, response) {
-  const id = Number(request.params.id);
-  const existing = await prisma.expense.findUnique({
-    where: { id },
+export async function atualizarDespesa(requisicao, resposta) {
+  const despesaId = Number(requisicao.params.id);
+  const despesaAtual = await prisma.expense.findUnique({
+    where: { id: despesaId },
     include: { shares: true },
   });
-  if (!existing) throw new AppError('Despesa não encontrada.', 404);
-  await ensureGroupAccess(existing.groupId, request.user);
 
-  if (request.user.role !== 'ADMIN' && existing.createdById !== request.user.id) {
-    throw new AppError('Você só pode editar despesas cadastradas por você.', 403);
+  if (!despesaAtual) throw new ErroAplicacao('Despesa não encontrada.', 404);
+  await garantirAcessoGrupo(despesaAtual.groupId, requisicao.usuario);
+
+  const podeEditar = requisicao.usuario.role === 'ADMIN'
+    || despesaAtual.createdById === requisicao.usuario.id;
+  if (!podeEditar) {
+    throw new ErroAplicacao('Você só pode editar despesas cadastradas por você.', 403);
   }
 
-  const { title, description, amount, date, payerId, categoryId, participantIds } = request.body;
-  if (title !== undefined && !title.trim()) {
-    throw new AppError('O título da despesa não pode ficar vazio.');
+  const {
+    title: titulo,
+    description: descricao,
+    amount: valor,
+    date: data,
+    payerId: pagadorId,
+    categoryId: categoriaId,
+    participantIds: participantesIds,
+  } = requisicao.body;
+
+  if (titulo !== undefined && !titulo.trim()) {
+    throw new ErroAplicacao('O título da despesa não pode ficar vazio.');
   }
-  const finalAmount = amount ?? Number(existing.amount);
-  const finalPayerId = payerId ?? existing.payerId;
-  const finalCategoryId = categoryId ?? existing.categoryId;
-  const finalParticipants = participantIds ?? existing.shares.map((share) => share.userId);
 
-  const { numericAmount, uniqueParticipants } = await validateExpenseData(existing.groupId, {
-    amount: finalAmount,
-    payerId: finalPayerId,
-    categoryId: finalCategoryId,
-    participantIds: finalParticipants,
-  });
+  const valorFinal = valor ?? Number(despesaAtual.amount);
+  const pagadorFinalId = pagadorId ?? despesaAtual.payerId;
+  const categoriaFinalId = categoriaId ?? despesaAtual.categoryId;
+  const participantesFinais = participantesIds
+    ?? despesaAtual.shares.map((parte) => parte.userId);
+  const { valorNumerico, participantesUnicos } = await validarDadosDespesa(
+    despesaAtual.groupId,
+    {
+      amount: valorFinal,
+      payerId: pagadorFinalId,
+      categoryId: categoriaFinalId,
+      participantIds: participantesFinais,
+    },
+  );
 
-  const expense = await prisma.$transaction(async (transaction) => {
-    await transaction.expenseShare.deleteMany({ where: { expenseId: id } });
-    return transaction.expense.update({
-      where: { id },
+  const despesaAtualizada = await prisma.$transaction(async (transacao) => {
+    await transacao.expenseShare.deleteMany({ where: { expenseId: despesaId } });
+
+    return transacao.expense.update({
+      where: { id: despesaId },
       data: {
-        title: title !== undefined ? title.trim() : undefined,
-        description: description !== undefined ? description?.trim() || null : undefined,
-        amount: numericAmount.toFixed(2),
-        date: date !== undefined ? new Date(`${date}T12:00:00`) : undefined,
-        payerId: Number(finalPayerId),
-        categoryId: Number(finalCategoryId),
-        shares: { create: splitAmountEqually(numericAmount, uniqueParticipants) },
+        title: titulo !== undefined ? titulo.trim() : undefined,
+        description: descricao !== undefined ? descricao?.trim() || null : undefined,
+        amount: valorNumerico.toFixed(2),
+        date: data !== undefined ? new Date(`${data}T12:00:00`) : undefined,
+        payerId: Number(pagadorFinalId),
+        categoryId: Number(categoriaFinalId),
+        shares: { create: dividirValorIgualmente(valorNumerico, participantesUnicos) },
       },
-      include: {
-        payer: { select: { id: true, name: true } },
-        category: true,
-        shares: { include: { user: { select: { id: true, name: true } } } },
-      },
+      include: dadosRelacionadosDaDespesa(),
     });
   });
 
-  response.json(expense);
+  resposta.json(despesaAtualizada);
 }
 
-export async function deleteExpense(request, response) {
-  const id = Number(request.params.id);
-  const expense = await prisma.expense.findUnique({ where: { id } });
-  if (!expense) throw new AppError('Despesa não encontrada.', 404);
-  await ensureGroupAccess(expense.groupId, request.user);
+export async function excluirDespesa(requisicao, resposta) {
+  const despesaId = Number(requisicao.params.id);
+  const despesa = await prisma.expense.findUnique({ where: { id: despesaId } });
 
-  if (request.user.role !== 'ADMIN' && expense.createdById !== request.user.id) {
-    throw new AppError('Você só pode excluir despesas cadastradas por você.', 403);
+  if (!despesa) throw new ErroAplicacao('Despesa não encontrada.', 404);
+  await garantirAcessoGrupo(despesa.groupId, requisicao.usuario);
+
+  const podeExcluir = requisicao.usuario.role === 'ADMIN'
+    || despesa.createdById === requisicao.usuario.id;
+  if (!podeExcluir) {
+    throw new ErroAplicacao('Você só pode excluir despesas cadastradas por você.', 403);
   }
 
-  await prisma.expense.delete({ where: { id } });
-  response.status(204).send();
+  await prisma.expense.delete({ where: { id: despesaId } });
+  resposta.status(204).send();
 }

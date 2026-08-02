@@ -19,7 +19,7 @@ Não foi usado framework visual. A interface foi construída em CSS para que o f
 ### Usuário comum
 
 - criar conta e entrar no sistema;
-- editar o próprio perfil;
+- editar o próprio perfil e trocar a senha;
 - criar grupos de despesas;
 - adicionar ao grupo pessoas já cadastradas;
 - criar, consultar, editar e excluir as próprias despesas;
@@ -31,9 +31,9 @@ Não foi usado framework visual. A interface foi construída em CSS para que o f
 
 ### Administrador
 
-O administrador é o proprietário da aplicação, não apenas o organizador de um grupo.
+O administrador cuida dos cadastros gerais da aplicação.
 
-- visualizar todos os grupos, usuários e despesas;
+- visualizar todos os grupos e usuários;
 - abrir e editar qualquer grupo;
 - editar ou excluir qualquer despesa;
 - confirmar ou recusar pagamentos informados pelos participantes;
@@ -61,6 +61,8 @@ racho-webapp/
 └── frontend/
     └── src/
         ├── components/
+        │   ├── admin/
+        │   └── group/
         ├── contexts/
         ├── pages/
         ├── services/
@@ -68,6 +70,10 @@ racho-webapp/
         ├── App.jsx
         └── styles.css
 ```
+
+Os principais nomes internos de componentes, funções e variáveis estão em português. Nomes como
+`name`, `password`, `groupId` e `participantIds` foram mantidos somente nos campos da
+API e do Prisma, pois fazem parte do contrato entre as camadas.
 
 ## Execução local
 

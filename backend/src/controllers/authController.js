@@ -1,94 +1,112 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
-import { AppError } from '../utils/AppError.js';
-import { publicUser } from '../utils/serializers.js';
+import { ErroAplicacao } from '../utils/AppError.js';
+import { dadosPublicosUsuario } from '../utils/serializers.js';
 
-function createToken(user) {
+function criarToken(usuario) {
   return jwt.sign(
-    { userId: user.id, role: user.role },
+    { userId: usuario.id, role: usuario.role },
     process.env.JWT_SECRET,
     { expiresIn: '8h' },
   );
 }
 
-export async function register(request, response) {
-  const { name, email, password } = request.body;
+export async function cadastrar(requisicao, resposta) {
+  const { name: nome, email, password: senha } = requisicao.body;
 
-  if (!name?.trim() || !email?.trim() || !password) {
-    throw new AppError('Nome, e-mail e senha são obrigatórios.');
+  if (!nome?.trim() || !email?.trim() || !senha) {
+    throw new ErroAplicacao('Nome, e-mail e senha são obrigatórios.');
+  }
+  if (senha.length < 6) {
+    throw new ErroAplicacao('A senha precisa ter pelo menos 6 caracteres.');
   }
 
-  if (password.length < 6) {
-    throw new AppError('A senha precisa ter pelo menos 6 caracteres.');
+  const emailNormalizado = email.trim().toLowerCase();
+  const usuarioExistente = await prisma.user.findUnique({ where: { email: emailNormalizado } });
+
+  if (usuarioExistente) {
+    throw new ErroAplicacao('Já existe uma conta com esse e-mail.', 409);
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
-  const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-
-  if (existingUser) {
-    throw new AppError('Já existe uma conta com esse e-mail.', 409);
-  }
-
-  const user = await prisma.user.create({
+  const usuario = await prisma.user.create({
     data: {
-      name: name.trim(),
-      email: normalizedEmail,
-      passwordHash: await bcrypt.hash(password, 10),
+      name: nome.trim(),
+      email: emailNormalizado,
+      passwordHash: await bcrypt.hash(senha, 10),
     },
   });
 
-  response.status(201).json({ token: createToken(user), user: publicUser(user) });
+  resposta.status(201).json({
+    token: criarToken(usuario),
+    user: dadosPublicosUsuario(usuario),
+  });
 }
 
-export async function login(request, response) {
-  const { email, password } = request.body;
+export async function entrar(requisicao, resposta) {
+  const { email, password: senha } = requisicao.body;
 
-  if (!email || !password) {
-    throw new AppError('Informe e-mail e senha.');
+  if (!email || !senha) {
+    throw new ErroAplicacao('Informe e-mail e senha.');
   }
 
-  const user = await prisma.user.findUnique({
+  const usuario = await prisma.user.findUnique({
     where: { email: email.trim().toLowerCase() },
   });
+  const senhaCorreta = usuario && await bcrypt.compare(senha, usuario.passwordHash);
 
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    throw new AppError('E-mail ou senha incorretos.', 401);
+  if (!usuario || !senhaCorreta) {
+    throw new ErroAplicacao('E-mail ou senha incorretos.', 401);
+  }
+  if (!usuario.active) {
+    throw new ErroAplicacao('Esta conta foi desativada pelo administrador.', 403);
   }
 
-  if (!user.active) {
-    throw new AppError('Esta conta foi desativada pelo administrador.', 403);
-  }
-
-  response.json({ token: createToken(user), user: publicUser(user) });
+  resposta.json({
+    token: criarToken(usuario),
+    user: dadosPublicosUsuario(usuario),
+  });
 }
 
-export async function me(request, response) {
-  response.json(publicUser(request.user));
+export async function obterPerfil(requisicao, resposta) {
+  resposta.json(dadosPublicosUsuario(requisicao.usuario));
 }
 
-export async function updateProfile(request, response) {
-  const { name, email, currentPassword, newPassword } = request.body;
-  const data = {};
+export async function atualizarPerfil(requisicao, resposta) {
+  const {
+    name: nome,
+    email,
+    currentPassword: senhaAtual,
+    newPassword: novaSenha,
+  } = requisicao.body;
+  const dadosAtualizacao = {};
 
-  if (name !== undefined) {
-    if (!name.trim()) throw new AppError('O nome não pode ficar vazio.');
-    data.name = name.trim();
+  if (nome !== undefined) {
+    if (!nome.trim()) throw new ErroAplicacao('O nome não pode ficar vazio.');
+    dadosAtualizacao.name = nome.trim();
   }
 
   if (email !== undefined) {
-    if (!email.trim()) throw new AppError('O e-mail não pode ficar vazio.');
-    data.email = email.trim().toLowerCase();
+    if (!email.trim()) throw new ErroAplicacao('O e-mail não pode ficar vazio.');
+    dadosAtualizacao.email = email.trim().toLowerCase();
   }
 
-  if (newPassword) {
-    if (!currentPassword || !(await bcrypt.compare(currentPassword, request.user.passwordHash))) {
-      throw new AppError('A senha atual está incorreta.', 401);
+  if (novaSenha) {
+    const senhaAtualCorreta = senhaAtual
+      && await bcrypt.compare(senhaAtual, requisicao.usuario.passwordHash);
+
+    if (!senhaAtualCorreta) {
+      throw new ErroAplicacao('A senha atual está incorreta.', 401);
     }
-    if (newPassword.length < 6) throw new AppError('A nova senha precisa ter 6 caracteres.');
-    data.passwordHash = await bcrypt.hash(newPassword, 10);
+    if (novaSenha.length < 6) {
+      throw new ErroAplicacao('A nova senha precisa ter 6 caracteres.');
+    }
+    dadosAtualizacao.passwordHash = await bcrypt.hash(novaSenha, 10);
   }
 
-  const user = await prisma.user.update({ where: { id: request.user.id }, data });
-  response.json(publicUser(user));
+  const usuarioAtualizado = await prisma.user.update({
+    where: { id: requisicao.usuario.id },
+    data: dadosAtualizacao,
+  });
+  resposta.json(dadosPublicosUsuario(usuarioAtualizado));
 }

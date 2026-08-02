@@ -1,24 +1,24 @@
-export function Feedback({ type = 'error', children }) {
+export function Feedback({ tipo = 'error', children }) {
   if (!children) return null;
-  return <div className={`feedback feedback--${type}`}>{children}</div>;
+  return <div className={`feedback feedback--${tipo}`}>{children}</div>;
 }
 
-export function Loading({ label = 'Carregando...' }) {
+export function Carregamento({ texto = 'Carregando...' }) {
   return (
     <div className="loading-state">
       <span className="spinner" />
-      <span>{label}</span>
+      <span>{texto}</span>
     </div>
   );
 }
 
-export function EmptyState({ icon = '🧾', title, text, action }) {
+export function EstadoVazio({ icone = '🧾', titulo, texto, acao }) {
   return (
     <div className="empty-state">
-      <span className="empty-state__icon">{icon}</span>
-      <h3>{title}</h3>
-      <p>{text}</p>
-      {action}
+      <span className="empty-state__icon">{icone}</span>
+      <h3>{titulo}</h3>
+      <p>{texto}</p>
+      {acao}
     </div>
   );
 }

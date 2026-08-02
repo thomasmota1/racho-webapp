@@ -1,3 +1,4 @@
+// Importa dados e elementos visuais.
 import { useState } from 'react';
 import { requisicaoApi } from '../../services/api.js';
 import { formatarDataCurta, formatarDinheiro } from '../../utils/format.js';
@@ -5,13 +6,16 @@ import Avatar from '../Avatar.jsx';
 import IndicadorStatus from '../StatusBadge.jsx';
 import { EstadoVazio, Feedback } from '../Feedback.jsx';
 
+// Converte saldo em mensagem.
 function textoDoSaldo(saldo) {
   if (saldo > 0) return `Você recebe ${formatarDinheiro(saldo)}`;
   if (saldo < 0) return `Você paga ${formatarDinheiro(Math.abs(saldo))}`;
   return 'Você está em dia';
 }
 
+// Resume o saldo do usuário.
 export function ResumoSaldoGrupo({ grupo, usuario, aoAdicionarDespesa }) {
+  // Localiza e classifica o saldo.
   const saldo = grupo.balances.find((item) => item.user.id === usuario.id)?.balance || 0;
   const estilo = saldo > 0 ? 'positive' : saldo < 0 ? 'negative' : 'neutral';
 
@@ -29,7 +33,9 @@ export function ResumoSaldoGrupo({ grupo, usuario, aoAdicionarDespesa }) {
   );
 }
 
+// Lista despesas cadastradas.
 export function ListaDespesas({ grupo, usuario, aoEditar, aoExcluir }) {
+  // Trata grupos sem despesas.
   if (grupo.expenses.length === 0) {
     return (
       <EstadoVazio
@@ -42,6 +48,7 @@ export function ListaDespesas({ grupo, usuario, aoEditar, aoExcluir }) {
 
   return (
     <div>
+      {/* Exibe cabeçalho da lista. */}
       <div className="section-heading">
         <div>
           <span className="eyebrow">HISTÓRICO</span>
@@ -50,8 +57,10 @@ export function ListaDespesas({ grupo, usuario, aoEditar, aoExcluir }) {
         <span className="count-badge">{grupo.expenses.length} registros</span>
       </div>
 
+      {/* Monta cada despesa cadastrada. */}
       <div className="expense-list">
         {grupo.expenses.map((despesa) => {
+          // Verifica permissão de edição.
           const podeEditar = usuario.role === 'ADMIN' || despesa.createdBy.id === usuario.id;
 
           return (
@@ -91,11 +100,14 @@ export function ListaDespesas({ grupo, usuario, aoEditar, aoExcluir }) {
   );
 }
 
+// Exibe saldos e sugestões.
 export function PainelSaldos({ grupo, usuario, aoInformarPagamento }) {
+  // Localiza o saldo pessoal.
   const saldoUsuario = grupo.balances.find((item) => item.user.id === usuario.id)?.balance || 0;
 
   return (
     <div>
+      {/* Destaca o resultado pessoal. */}
       <div className="balance-highlight">
         <div>
           <span className="eyebrow">SEU RESULTADO NESTE GRUPO</span>
@@ -111,12 +123,14 @@ export function PainelSaldos({ grupo, usuario, aoInformarPagamento }) {
           <h2>Resumo dos participantes</h2>
         </div>
       </div>
+      {/* Lista saldos dos participantes. */}
       <div className="balance-grid">
         {grupo.balances.map((item) => (
           <CartaoSaldo key={item.user.id} dadosSaldo={item} />
         ))}
       </div>
 
+      {/* Lista sugestões de pagamento. */}
       <div className="section-heading section-heading--spaced">
         <div>
           <span className="eyebrow">MODO SEM CLIMÃO</span>
@@ -145,7 +159,9 @@ export function PainelSaldos({ grupo, usuario, aoInformarPagamento }) {
   );
 }
 
+// Exibe o saldo individual.
 function CartaoSaldo({ dadosSaldo }) {
+  // Escolhe a cor adequada.
   const classeSaldo = dadosSaldo.balance > 0
     ? 'money-positive'
     : dadosSaldo.balance < 0
@@ -166,6 +182,7 @@ function CartaoSaldo({ dadosSaldo }) {
   );
 }
 
+// Exibe uma sugestão de pagamento.
 function SugestaoPagamento({ sugestao, podePagar, aoInformar }) {
   return (
     <article className="suggestion">
@@ -190,9 +207,12 @@ function SugestaoPagamento({ sugestao, podePagar, aoInformar }) {
   );
 }
 
+// Lista pagamentos registrados.
 export function ListaAcertos({ grupo, usuario, aoAtualizar }) {
+  // Armazena falhas de atualização.
   const [erro, setErro] = useState('');
 
+  // Atualiza o status do pagamento.
   async function atualizarStatus(acertoId, novoStatus) {
     try {
       await requisicaoApi(`/settlements/${acertoId}/status`, {
@@ -205,6 +225,7 @@ export function ListaAcertos({ grupo, usuario, aoAtualizar }) {
     }
   }
 
+  // Trata grupos sem pagamentos.
   if (grupo.settlements.length === 0) {
     return (
       <EstadoVazio
@@ -225,6 +246,7 @@ export function ListaAcertos({ grupo, usuario, aoAtualizar }) {
         </div>
       </div>
 
+      {/* Monta cada pagamento registrado. */}
       <div className="settlement-list">
         {grupo.settlements.map((acerto) => (
           <LinhaAcerto
@@ -239,6 +261,7 @@ export function ListaAcertos({ grupo, usuario, aoAtualizar }) {
   );
 }
 
+// Exibe uma linha de pagamento.
 function LinhaAcerto({ acerto, podeConfirmar, aoAtualizarStatus }) {
   return (
     <article className="settlement-row">
@@ -276,6 +299,7 @@ function LinhaAcerto({ acerto, podeConfirmar, aoAtualizarStatus }) {
   );
 }
 
+// Lista participantes do grupo.
 export function ListaMembros({ grupo, podeGerenciar, aoAdicionar, aoExcluir }) {
   return (
     <div>
@@ -291,6 +315,7 @@ export function ListaMembros({ grupo, podeGerenciar, aoAdicionar, aoExcluir }) {
         )}
       </div>
 
+      {/* Monta cada participante. */}
       <div className="member-grid">
         {grupo.members.map((membro) => (
           <article className="member-card" key={membro.id}>

@@ -1,8 +1,10 @@
+// Exibe mensagens de retorno.
 export function Feedback({ tipo = 'error', children }) {
   if (!children) return null;
   return <div className={`feedback feedback--${tipo}`}>{children}</div>;
 }
 
+// Exibe o estado de carregamento.
 export function Carregamento({ texto = 'Carregando...' }) {
   return (
     <div className="loading-state">
@@ -12,6 +14,7 @@ export function Carregamento({ texto = 'Carregando...' }) {
   );
 }
 
+// Exibe conteúdo quando não há dados.
 export function EstadoVazio({ icone = '🧾', titulo, texto, acao }) {
   return (
     <div className="empty-state">

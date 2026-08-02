@@ -1,3 +1,4 @@
+// Remove dados sensíveis do usuário.
 export function dadosPublicosUsuario(usuario) {
   return {
     id: usuario.id,

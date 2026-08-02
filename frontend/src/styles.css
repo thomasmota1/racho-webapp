@@ -1,3 +1,4 @@
+/* Define cores e tipografia globais. */
 :root {
   font-family: "Segoe UI", Tahoma, Arial, sans-serif;
   color: #202033;
@@ -21,6 +22,7 @@
   --shadow: 0 6px 18px rgba(31, 31, 53, 0.07);
 }
 
+/* Padroniza elementos básicos da página. */
 * { box-sizing: border-box; }
 html { min-width: 320px; background: #f4f5fa; }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: #f4f5fa; }
@@ -31,13 +33,16 @@ button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 h1, h2, h3, p { margin-top: 0; }
 
+/* Estiliza a marca do sistema. */
 .logo { display: inline-flex; align-items: center; gap: 11px; color: #fff; }
 .logo__mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 8px; background: #8d7dff; color: #fff; font-size: 15px; font-weight: 900; letter-spacing: -1px; }
 .logo__name { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
 
+/* Estiliza textos auxiliares. */
 .eyebrow { display: block; margin-bottom: 8px; color: #77798d; font-size: 11px; font-weight: 700; letter-spacing: .75px; }
 .muted { color: var(--muted); }
 
+/* Define botões e suas variações. */
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 17px; border: 1px solid transparent; border-radius: 8px; font-weight: 700; transition: background .15s, border-color .15s; }
 .button:disabled { opacity: .6; cursor: wait; }
 .button--primary { background: var(--primary); color: #fff; }
@@ -51,6 +56,7 @@ h1, h2, h3, p { margin-top: 0; }
 .icon-button { width: 38px; height: 38px; border: 0; border-radius: 7px; background: #f1f2f7; color: #55576a; font-size: 22px; }
 .icon-button--danger { background: var(--negative-soft); color: var(--negative); }
 
+/* Organiza campos e formulários. */
 .field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .field > span { color: #4a4b5f; font-size: 13px; font-weight: 750; }
 .field input, .field textarea, .field select { width: 100%; border: 1px solid #dfe1ea; border-radius: 8px; outline: none; background: #fff; color: var(--ink); padding: 12px 14px; transition: border .15s, box-shadow .15s; }
@@ -64,6 +70,7 @@ h1, h2, h3, p { margin-top: 0; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 3px; }
 .divider { height: 1px; background: var(--line); }
 
+/* Representa retornos e estados vazios. */
 .feedback { padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 650; }
 .feedback--error { background: var(--negative-soft); color: #b33740; border: 1px solid #ffd4d7; }
 .feedback--success { background: var(--positive-soft); color: var(--positive); border: 1px solid #ccecdc; }
@@ -75,6 +82,7 @@ h1, h2, h3, p { margin-top: 0; }
 .empty-state h3 { margin-bottom: 7px; }
 .empty-state p { max-width: 430px; margin-bottom: 20px; color: var(--muted); }
 
+/* Monta as páginas de autenticação. */
 .auth-page { display: grid; grid-template-columns: minmax(420px, 44%) 1fr; min-height: 100vh; background: #fff; }
 .auth-showcase { position: relative; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 42px 54px; border-right: 6px solid var(--primary); background: #19182c; color: #fff; }
 .auth-showcase--register { background: #211d37; }
@@ -99,6 +107,7 @@ h1, h2, h3, p { margin-top: 0; }
 .mobile-logo { display: none; margin-bottom: 35px; }
 .mobile-logo .logo__name { color: var(--ink); }
 
+/* Estrutura navegação e conteúdo internos. */
 .app-shell { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
 .sidebar { position: sticky; top: 0; display: flex; height: 100vh; flex-direction: column; padding: 28px 21px; background: var(--sidebar); color: #fff; }
 .sidebar__nav { display: flex; flex-direction: column; gap: 6px; margin-top: 42px; }
@@ -117,6 +126,7 @@ h1, h2, h3, p { margin-top: 0; }
 .avatar--lg { width: 48px; height: 48px; border-radius: 9px; font-size: 14px; }
 .avatar--xl { width: 82px; height: 82px; border-radius: 12px; font-size: 22px; }
 
+/* Organiza cabeçalho e painel principal. */
 .main-content { min-width: 0; }
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 25px 36px 22px; border-bottom: 1px solid var(--line); background: #fff; }
 .topbar h1 { margin-bottom: 2px; font-size: 23px; letter-spacing: -.8px; }
@@ -125,6 +135,7 @@ h1, h2, h3, p { margin-top: 0; }
 .dashboard-heading { display: flex; align-items: center; justify-content: space-between; }
 .dashboard-heading h2 { margin-bottom: 4px; font-size: 24px; letter-spacing: -.7px; }
 .dashboard-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+/* Estiliza indicadores e títulos. */
 .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin: 20px 0 32px; }
 .stat-card { position: relative; padding: 19px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
 .stat-card__dot { position: absolute; top: 22px; right: 20px; width: 9px; height: 9px; border-radius: 50%; background: #b5b5c3; }
@@ -139,6 +150,7 @@ h1, h2, h3, p { margin-top: 0; }
 .section-heading h2 { margin: 0; font-size: 23px; letter-spacing: -.8px; }
 .section-heading .eyebrow { margin-bottom: 5px; }
 .section-heading--spaced { margin-top: 38px; }
+/* Organiza os cartões de grupos. */
 .group-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 17px; }
 .group-card { display: flex; min-height: 250px; flex-direction: column; padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: #fff; transition: box-shadow .15s, border-color .15s; }
 .group-card:hover { border-color: #c7c1ef; box-shadow: var(--shadow); }
@@ -155,6 +167,7 @@ h1, h2, h3, p { margin-top: 0; }
 .money-negative { color: var(--negative) !important; }
 .money-neutral { color: #77798b !important; }
 
+/* Estiliza os detalhes do grupo. */
 .content-card { padding: 24px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .group-header { display: flex; align-items: center; justify-content: space-between; gap: 25px; padding: 24px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .group-header__identity { display: flex; align-items: center; gap: 18px; }
@@ -174,6 +187,7 @@ h1, h2, h3, p { margin-top: 0; }
 .group-balance-card--positive h2 { color: var(--positive); }
 .group-balance-card--negative { border-color: #ffdadd; background: #fffdfd; }
 .group-balance-card--negative h2 { color: var(--negative); }
+/* Organiza abas e listas detalhadas. */
 .tabs { display: flex; overflow-x: auto; gap: 3px; margin: 0 0 15px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
 .tabs button { min-width: max-content; border: 0; border-radius: 6px; background: transparent; padding: 10px 17px; color: var(--muted); font-size: 13px; font-weight: 750; }
 .tabs button.active { background: var(--primary-soft); color: #5747c9; }
@@ -194,6 +208,7 @@ h1, h2, h3, p { margin-top: 0; }
 .row-actions button, .row-actions a { border: 0; background: transparent; color: var(--primary); font-size: 11px; font-weight: 800; }
 .row-actions .danger-link { color: var(--negative); }
 .row-actions--right { justify-content: flex-end; }
+/* Estiliza saldos e sugestões. */
 .balance-highlight { display: flex; align-items: center; justify-content: space-between; margin-bottom: 29px; padding: 25px; border: 1px solid #ddd8fa; border-left: 4px solid var(--primary); border-radius: 9px; background: #f8f7ff; }
 .balance-highlight h2 { margin-bottom: 7px; font-size: 27px; letter-spacing: -1px; }
 .balance-highlight p { margin: 0; color: var(--muted); }
@@ -217,6 +232,7 @@ h1, h2, h3, p { margin-top: 0; }
 .status--confirmed { background: var(--positive-soft); color: var(--positive); }
 .status--rejected { background: var(--negative-soft); color: var(--negative); }
 .status--neutral { background: #f1f2f7; color: #656678; }
+/* Organiza cartões dos participantes. */
 .member-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .member-card { display: flex; align-items: center; gap: 13px; padding: 16px; border: 1px solid var(--line); border-radius: 8px; }
 .member-card > div { min-width: 0; flex: 1; }
@@ -225,6 +241,7 @@ h1, h2, h3, p { margin-top: 0; }
 .member-card span { overflow: hidden; margin-top: 3px; color: var(--muted); font-size: 11px; text-overflow: ellipsis; }
 .member-card small { margin-top: 5px; color: var(--primary); font-size: 10px; font-weight: 750; }
 
+/* Estiliza modais e seus formulários. */
 .modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(18, 18, 34, .62); }
 .modal { width: min(100%, 530px); max-height: calc(100vh - 40px); overflow-y: auto; border-radius: 10px; background: #fff; box-shadow: 0 18px 55px rgba(0,0,0,.24); }
 .modal--wide { width: min(100%, 760px); }
@@ -247,6 +264,7 @@ h1, h2, h3, p { margin-top: 0; }
 .payment-notice > span { display: grid; flex: 0 0 auto; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #f2cf82; font-weight: 900; }
 .payment-notice p { margin: 0; font-size: 12px; line-height: 1.45; }
 
+/* Organiza a página de perfil. */
 .profile-layout { display: grid; grid-template-columns: 270px 1fr; gap: 18px; }
 .profile-card { display: flex; align-items: center; flex-direction: column; height: max-content; padding: 32px 22px; border: 1px solid var(--line); border-radius: 10px; background: #fff; text-align: center; }
 .profile-card h2 { margin: 17px 0 5px; font-size: 19px; }
@@ -254,6 +272,7 @@ h1, h2, h3, p { margin-top: 0; }
 .role-badge { display: inline-flex; padding: 7px 10px; border-radius: 999px; background: var(--primary-soft); color: #5747c9; font-size: 10px; font-weight: 850; }
 .role-badge--small { padding: 5px 8px; }
 
+/* Estiliza o painel administrativo. */
 .admin-banner { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 17px 20px; border-radius: 9px; background: #1f1f35; color: #fff; }
 .admin-banner > div { display: flex; align-items: center; gap: 13px; }
 .admin-banner > div > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 7px; background: #8475ee; font-size: 22px; }
@@ -280,6 +299,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .color-sample { display: flex; align-items: center; gap: 8px; }
 .color-sample i { width: 13px; height: 13px; border-radius: 4px; }
 
+/* Ajusta grades em telas médias. */
 @media (max-width: 1150px) {
   .group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -288,6 +308,7 @@ tbody tr:last-child td { border-bottom: 0; }
   .auth-showcase h1 { font-size: 50px; }
 }
 
+/* Ajusta navegação em tablets. */
 @media (max-width: 900px) {
   .app-shell { grid-template-columns: 82px 1fr; }
   .sidebar { padding: 24px 14px; align-items: center; }
@@ -308,6 +329,7 @@ tbody tr:last-child td { border-bottom: 0; }
   .profile-card .role-badge { margin-left: auto; }
 }
 
+/* Ajusta interface em celulares. */
 @media (max-width: 700px) {
   .app-shell { display: block; }
   .sidebar { position: fixed; z-index: 50; top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; height: 64px; flex-direction: row; justify-content: center; padding: 7px 10px; border-radius: 10px; box-shadow: 0 12px 30px rgba(12,12,25,.28); }

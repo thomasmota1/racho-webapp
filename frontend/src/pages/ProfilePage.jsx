@@ -1,27 +1,34 @@
+// Importa recursos do perfil.
 import { useState } from 'react';
 import { usarAutenticacao } from '../contexts/AuthContext.jsx';
 import { requisicaoApi } from '../services/api.js';
 import Avatar from '../components/Avatar.jsx';
 import { Feedback } from '../components/Feedback.jsx';
 
+// Exibe e atualiza o perfil.
 export default function PaginaPerfil() {
+  // Obtém o usuário autenticado.
   const { usuario, atualizarUsuario } = usarAutenticacao();
+  // Preenche os campos atuais.
   const [formulario, setFormulario] = useState({
     nome: usuario.name,
     email: usuario.email,
     senhaAtual: '',
     novaSenha: '',
   });
+  // Controla retornos e salvamento.
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Envia alterações do perfil.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
     setMensagem('');
 
+    // Atualiza dados e sessão.
     try {
       await requisicaoApi('/auth/me', {
         method: 'PATCH',
@@ -48,6 +55,7 @@ export default function PaginaPerfil() {
 
   return (
     <div className="profile-layout">
+      {/* Resume a conta atual. */}
       <aside className="profile-card">
         <Avatar nome={usuario.name} tamanho="xl" />
         <h2>{usuario.name}</h2>
@@ -56,11 +64,13 @@ export default function PaginaPerfil() {
           {usuario.role === 'ADMIN' ? 'Administrador do site' : 'Usuário comum'}
         </span>
       </aside>
+      {/* Exibe dados editáveis. */}
       <section className="content-card">
         <div className="section-heading"><div><span className="eyebrow">DADOS DA CONTA</span><h2>Editar perfil</h2></div></div>
         <form className="form-stack" onSubmit={enviarFormulario}>
           <Feedback>{erro}</Feedback>
           <Feedback tipo="success">{mensagem}</Feedback>
+          {/* Edita nome e e-mail. */}
           <div className="form-grid">
             <label className="field">
               <span>Nome</span>
@@ -80,6 +90,7 @@ export default function PaginaPerfil() {
               />
             </label>
           </div>
+          {/* Permite alterar a senha. */}
           <div className="divider" />
           <h3>Alterar senha</h3>
           <p className="muted">Deixe os campos vazios para manter a senha atual.</p>

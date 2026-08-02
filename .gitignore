@@ -1,6 +1,9 @@
+# Ignora dependências e arquivos gerados.
 node_modules/
 dist/
+# Protege ambiente e registros locais.
 .env
 *.log
+# Ignora dados locais auxiliares.
 .postgres-data/
 .DS_Store

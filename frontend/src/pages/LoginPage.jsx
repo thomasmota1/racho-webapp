@@ -1,21 +1,27 @@
+// Importa recursos da autenticação.
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usarAutenticacao } from '../contexts/AuthContext.jsx';
 import Logotipo from '../components/Logo.jsx';
 import { Feedback } from '../components/Feedback.jsx';
 
+// Exibe o formulário de entrada.
 export default function PaginaLogin() {
+  // Obtém autenticação e navegação.
   const { entrar } = usarAutenticacao();
   const navegar = useNavigate();
+  // Controla formulário, erro e envio.
   const [formulario, setFormulario] = useState({ email: '', senha: '' });
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
 
+  // Envia as credenciais informadas.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setErro('');
     setEnviando(true);
 
+    // Autentica e redireciona usuário.
     try {
       await entrar(formulario.email, formulario.senha);
       navegar('/');
@@ -26,6 +32,7 @@ export default function PaginaLogin() {
     }
   }
 
+  // Preenche credenciais de demonstração.
   function preencherAcessoDemonstracao(tipo) {
     setFormulario(tipo === 'administrador'
       ? { email: 'admin@racho.com', senha: 'admin123' }
@@ -34,6 +41,7 @@ export default function PaginaLogin() {
 
   return (
     <main className="auth-page">
+      {/* Apresenta a proposta do sistema. */}
       <section className="auth-showcase">
         <Logotipo />
         <div className="auth-showcase__content">
@@ -43,6 +51,7 @@ export default function PaginaLogin() {
         </div>
       </section>
 
+      {/* Exibe o formulário de acesso. */}
       <section className="auth-panel">
         <form className="auth-form" onSubmit={enviarFormulario}>
           <span className="mobile-logo"><Logotipo /></span>

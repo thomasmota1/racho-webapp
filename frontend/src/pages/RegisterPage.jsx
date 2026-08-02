@@ -1,21 +1,27 @@
+// Importa recursos do cadastro.
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usarAutenticacao } from '../contexts/AuthContext.jsx';
 import Logotipo from '../components/Logo.jsx';
 import { Feedback } from '../components/Feedback.jsx';
 
+// Exibe o formulário de cadastro.
 export default function PaginaCadastro() {
+  // Obtém cadastro e navegação.
   const { cadastrar } = usarAutenticacao();
   const navegar = useNavigate();
+  // Controla formulário, erro e envio.
   const [formulario, setFormulario] = useState({ nome: '', email: '', senha: '' });
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
 
+  // Envia os dados cadastrados.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setErro('');
     setEnviando(true);
 
+    // Cadastra e redireciona usuário.
     try {
       await cadastrar(formulario.nome, formulario.email, formulario.senha);
       navegar('/');
@@ -28,6 +34,7 @@ export default function PaginaCadastro() {
 
   return (
     <main className="auth-page">
+      {/* Apresenta os recursos principais. */}
       <section className="auth-showcase auth-showcase--register">
         <Logotipo />
         <div className="auth-showcase__content">
@@ -41,6 +48,7 @@ export default function PaginaCadastro() {
           </ul>
         </div>
       </section>
+      {/* Exibe os campos cadastrais. */}
       <section className="auth-panel">
         <form className="auth-form" onSubmit={enviarFormulario}>
           <span className="mobile-logo"><Logotipo /></span>

@@ -1,24 +1,30 @@
+// Gera o cliente JavaScript.
 generator client {
   provider = "prisma-client-js"
 }
 
+// Configura o banco PostgreSQL.
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// Define os perfis disponíveis.
 enum Role {
   ADMIN
   USER
 }
 
+// Define os status de pagamento.
 enum SettlementStatus {
   PENDING
   CONFIRMED
   REJECTED
 }
 
+// Armazena contas e seus relacionamentos.
 model User {
+  // Define dados básicos da conta.
   id                  Int           @id @default(autoincrement())
   name                String
   email               String        @unique
@@ -27,6 +33,7 @@ model User {
   active               Boolean       @default(true)
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
+  // Relaciona atividades do usuário.
   groupsCreated        Group[]       @relation("GroupCreator")
   memberships          GroupMember[]
   expensesPaid         Expense[]     @relation("ExpensePayer")
@@ -37,7 +44,9 @@ model User {
   settlementsCreated   Settlement[]  @relation("SettlementCreator")
 }
 
+// Armazena grupos de despesas.
 model Group {
+  // Define dados básicos do grupo.
   id          Int          @id @default(autoincrement())
   name        String
   description String?
@@ -45,12 +54,14 @@ model Group {
   createdById Int
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  // Relaciona criador e movimentações.
   createdBy   User         @relation("GroupCreator", fields: [createdById], references: [id], onDelete: Cascade)
   members     GroupMember[]
   expenses    Expense[]
   settlements Settlement[]
 }
 
+// Relaciona usuários aos grupos.
 model GroupMember {
   id       Int      @id @default(autoincrement())
   groupId  Int
@@ -59,9 +70,11 @@ model GroupMember {
   group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Evita participação duplicada.
   @@unique([groupId, userId])
 }
 
+// Armazena categorias disponíveis.
 model Category {
   id        Int       @id @default(autoincrement())
   name      String    @unique
@@ -73,7 +86,9 @@ model Category {
   expenses  Expense[]
 }
 
+// Armazena despesas cadastradas.
 model Expense {
+  // Define valores e responsáveis.
   id          Int            @id @default(autoincrement())
   groupId     Int
   title       String
@@ -85,6 +100,7 @@ model Expense {
   categoryId  Int
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  // Relaciona grupo, pessoas e categoria.
   group       Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   payer       User           @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: Cascade)
   createdBy   User           @relation("ExpenseCreator", fields: [createdById], references: [id], onDelete: Cascade)
@@ -92,6 +108,7 @@ model Expense {
   shares      ExpenseShare[]
 }
 
+// Armazena divisões das despesas.
 model ExpenseShare {
   id        Int      @id @default(autoincrement())
   expenseId Int
@@ -100,10 +117,13 @@ model ExpenseShare {
   expense   Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Evita divisão duplicada.
   @@unique([expenseId, userId])
 }
 
+// Armazena pagamentos entre usuários.
 model Settlement {
+  // Define participantes e valor.
   id           Int              @id @default(autoincrement())
   groupId      Int
   payerId      Int
@@ -115,6 +135,7 @@ model Settlement {
   status       SettlementStatus @default(PENDING)
   createdAt    DateTime         @default(now())
   confirmedAt  DateTime?
+  // Relaciona grupo e usuários envolvidos.
   group        Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
   payer        User             @relation("SettlementPayer", fields: [payerId], references: [id], onDelete: Cascade)
   receiver     User             @relation("SettlementReceiver", fields: [receiverId], references: [id], onDelete: Cascade)

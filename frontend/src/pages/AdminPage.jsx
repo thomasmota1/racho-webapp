@@ -1,3 +1,4 @@
+// Importa recursos administrativos.
 import { useEffect, useState } from 'react';
 import { requisicaoApi } from '../services/api.js';
 import DialogoConfirmacao from '../components/ConfirmDialog.jsx';
@@ -10,6 +11,7 @@ import {
 } from '../components/admin/AdminSections.jsx';
 import { ModalCategoria, ModalUsuario } from '../components/admin/AdminModals.jsx';
 
+// Define as abas administrativas.
 const ABAS_ADMINISTRACAO = [
   { id: 'resumo', rotulo: 'Resumo' },
   { id: 'usuarios', rotulo: 'Usuários' },
@@ -17,15 +19,19 @@ const ABAS_ADMINISTRACAO = [
   { id: 'categorias', rotulo: 'Categorias' },
 ];
 
+// Exibe o painel administrativo.
 export default function PaginaAdministracao() {
+  // Controla dados, abas e modais.
   const [abaSelecionada, setAbaSelecionada] = useState('resumo');
   const [dados, setDados] = useState(null);
   const [erro, setErro] = useState('');
   const [modalAberto, setModalAberto] = useState(null);
   const [confirmacao, setConfirmacao] = useState(null);
 
+  // Busca todos os dados administrativos.
   async function carregarDados() {
     try {
+      // Carrega recursos em paralelo.
       const [resumo, usuarios, grupos, categorias] = await Promise.all([
         requisicaoApi('/admin/overview'),
         requisicaoApi('/admin/users'),
@@ -40,10 +46,12 @@ export default function PaginaAdministracao() {
     }
   }
 
+  // Carrega dados ao abrir.
   useEffect(() => {
     carregarDados();
   }, []);
 
+  // Exclui o recurso selecionado.
   async function excluirRecurso(caminho) {
     try {
       await requisicaoApi(caminho, { method: 'DELETE' });
@@ -53,11 +61,13 @@ export default function PaginaAdministracao() {
     }
   }
 
+  // Fecha modal e recarrega.
   function fecharModalERecarregar() {
     setModalAberto(null);
     carregarDados();
   }
 
+  // Trata o carregamento inicial.
   if (!dados && !erro) {
     return <Carregamento texto="Carregando o painel administrativo..." />;
   }
@@ -65,6 +75,7 @@ export default function PaginaAdministracao() {
 
   return (
     <>
+      {/* Identifica a área administrativa. */}
       <section className="admin-banner">
         <div>
           <span>◇</span>
@@ -78,6 +89,7 @@ export default function PaginaAdministracao() {
 
       <Feedback>{erro}</Feedback>
 
+      {/* Permite navegar entre cadastros. */}
       <nav className="tabs tabs--admin">
         {ABAS_ADMINISTRACAO.map((aba) => (
           <button
@@ -90,6 +102,7 @@ export default function PaginaAdministracao() {
         ))}
       </nav>
 
+      {/* Exibe o conteúdo selecionado. */}
       {abaSelecionada === 'resumo' && <ResumoAdministracao resumo={dados.resumo} />}
       {abaSelecionada === 'usuarios' && (
         <TabelaUsuarios
@@ -122,6 +135,7 @@ export default function PaginaAdministracao() {
         />
       )}
 
+      {/* Exibe formulários administrativos. */}
       {modalAberto?.tipo === 'usuario' && (
         <ModalUsuario
           usuario={modalAberto.dados}
@@ -136,6 +150,7 @@ export default function PaginaAdministracao() {
           aoSalvar={fecharModalERecarregar}
         />
       )}
+      {/* Confirma exclusões administrativas. */}
       {confirmacao && (
         <DialogoConfirmacao
           titulo={confirmacao.titulo}

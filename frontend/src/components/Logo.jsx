@@ -1,3 +1,4 @@
+// Exibe a marca da aplicação.
 export default function Logotipo() {
   return (
     <div className="logo">

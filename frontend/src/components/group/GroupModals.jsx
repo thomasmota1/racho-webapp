@@ -1,3 +1,4 @@
+// Importa recursos dos formulários.
 import { useState } from 'react';
 import { requisicaoApi } from '../../services/api.js';
 import { dataParaInput, formatarDinheiro } from '../../utils/format.js';
@@ -5,12 +6,16 @@ import Avatar from '../Avatar.jsx';
 import { Feedback } from '../Feedback.jsx';
 import Modal from '../Modal.jsx';
 
+// Cria ou edita uma despesa.
 export function ModalDespesa({ grupo, categorias, despesa, aoFechar, aoSalvar }) {
+  // Identifica o modo de edição.
   const editando = Boolean(despesa);
+  // Define participantes selecionados inicialmente.
   const participantesIniciais = despesa
     ? despesa.shares.map((parte) => parte.user.id)
     : grupo.members.map((membro) => membro.user.id);
 
+  // Preenche os campos da despesa.
   const [formulario, setFormulario] = useState({
     titulo: despesa?.title || '',
     descricao: despesa?.description || '',
@@ -20,9 +25,11 @@ export function ModalDespesa({ grupo, categorias, despesa, aoFechar, aoSalvar })
     categoriaId: despesa?.category.id || categorias[0]?.id,
     participantesIds: participantesIniciais,
   });
+  // Controla erro e salvamento.
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Marca ou desmarca participante.
   function alternarParticipante(usuarioId) {
     setFormulario((formularioAtual) => ({
       ...formularioAtual,
@@ -32,15 +39,18 @@ export function ModalDespesa({ grupo, categorias, despesa, aoFechar, aoSalvar })
     }));
   }
 
+  // Calcula o valor individual.
   const valorPorPessoa = formulario.participantesIds.length && formulario.valor
     ? Number(formulario.valor) / formulario.participantesIds.length
     : 0;
 
+  // Envia os dados da despesa.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
 
+    // Cria ou atualiza a despesa.
     try {
       const caminho = editando
         ? `/expenses/${despesa.id}`
@@ -72,6 +82,7 @@ export function ModalDespesa({ grupo, categorias, despesa, aoFechar, aoSalvar })
       aoFechar={aoFechar}
       amplo
     >
+      {/* Reúne dados e participantes. */}
       <form className="form-stack" onSubmit={enviarFormulario}>
         <Feedback>{erro}</Feedback>
         <div className="form-grid">
@@ -148,6 +159,7 @@ export function ModalDespesa({ grupo, categorias, despesa, aoFechar, aoSalvar })
           </label>
         </div>
 
+        {/* Seleciona participantes da divisão. */}
         <div className="participant-box">
           <div>
             <strong>Quem participa desta despesa?</strong>
@@ -185,8 +197,11 @@ export function ModalDespesa({ grupo, categorias, despesa, aoFechar, aoSalvar })
   );
 }
 
+// Registra um pagamento informado.
 export function ModalPagamento({ grupo, usuario, sugestao, aoFechar, aoSalvar }) {
+  // Localiza outro participante disponível.
   const outroMembroId = grupo.members.find((membro) => membro.user.id !== usuario.id)?.user.id;
+  // Preenche os dados do pagamento.
   const [formulario, setFormulario] = useState({
     pagadorId: sugestao?.payer.id || usuario.id,
     recebedorId: sugestao?.receiver.id || outroMembroId,
@@ -194,9 +209,11 @@ export function ModalPagamento({ grupo, usuario, sugestao, aoFechar, aoSalvar })
     forma: 'PIX',
     observacao: '',
   });
+  // Controla erro e salvamento.
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Localiza os nomes envolvidos.
   const nomePagador = grupo.members.find(
     (membro) => membro.user.id === Number(formulario.pagadorId),
   )?.user.name || '';
@@ -204,11 +221,13 @@ export function ModalPagamento({ grupo, usuario, sugestao, aoFechar, aoSalvar })
     (membro) => membro.user.id === Number(formulario.recebedorId),
   )?.user.name || '';
 
+  // Envia o pagamento informado.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
 
+    // Registra o pagamento pendente.
     try {
       await requisicaoApi(`/groups/${grupo.id}/settlements`, {
         method: 'POST',
@@ -234,6 +253,7 @@ export function ModalPagamento({ grupo, usuario, sugestao, aoFechar, aoSalvar })
       subtitulo="Registre um valor que foi pago entre os participantes."
       aoFechar={aoFechar}
     >
+      {/* Reúne os dados do pagamento. */}
       <form className="form-stack" onSubmit={enviarFormulario}>
         <Feedback>{erro}</Feedback>
         <div className="payment-notice">
@@ -292,16 +312,20 @@ export function ModalPagamento({ grupo, usuario, sugestao, aoFechar, aoSalvar })
   );
 }
 
+// Adiciona uma pessoa ao grupo.
 export function ModalAdicionarPessoa({ grupo, aoFechar, aoSalvar }) {
+  // Controla e-mail, erro e envio.
   const [email, setEmail] = useState('');
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Envia o convite por e-mail.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
 
+    // Adiciona o usuário encontrado.
     try {
       await requisicaoApi(`/groups/${grupo.id}/members`, {
         method: 'POST',
@@ -321,6 +345,7 @@ export function ModalAdicionarPessoa({ grupo, aoFechar, aoSalvar }) {
       subtitulo="A pessoa precisa ter uma conta cadastrada no Rachô."
       aoFechar={aoFechar}
     >
+      {/* Reúne e-mail e ações. */}
       <form className="form-stack" onSubmit={enviarFormulario}>
         <Feedback>{erro}</Feedback>
         <label className="field">
@@ -344,20 +369,25 @@ export function ModalAdicionarPessoa({ grupo, aoFechar, aoSalvar }) {
   );
 }
 
+// Edita os dados do grupo.
 export function ModalEditarGrupo({ grupo, aoFechar, aoSalvar }) {
+  // Preenche os dados atuais.
   const [formulario, setFormulario] = useState({
     nome: grupo.name,
     descricao: grupo.description || '',
     emoji: grupo.coverEmoji,
   });
+  // Controla erro e salvamento.
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Envia alterações do grupo.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
 
+    // Persiste os novos dados.
     try {
       await requisicaoApi(`/groups/${grupo.id}`, {
         method: 'PATCH',
@@ -381,6 +411,7 @@ export function ModalEditarGrupo({ grupo, aoFechar, aoSalvar }) {
       subtitulo="Altere o nome, a descrição ou o emoji do grupo."
       aoFechar={aoFechar}
     >
+      {/* Reúne campos e ações. */}
       <form className="form-stack" onSubmit={enviarFormulario}>
         <Feedback>{erro}</Feedback>
         <div className="form-grid">

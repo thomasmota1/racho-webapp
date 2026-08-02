@@ -1,3 +1,4 @@
+// Importa recursos do painel.
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { requisicaoApi } from '../services/api.js';
@@ -5,13 +6,17 @@ import { formatarDinheiro } from '../utils/format.js';
 import Modal from '../components/Modal.jsx';
 import { Carregamento, EstadoVazio, Feedback } from '../components/Feedback.jsx';
 
+// Lista os emojis disponíveis.
 const opcoesEmoji = ['🎉', '🏖️', '🔥', '🏠', '🎓', '🎁', '🚗', '🍕'];
 
+// Exibe o resumo dos grupos.
 export default function PaginaPainel() {
+  // Controla dados, erros e modal.
   const [dados, setDados] = useState(null);
   const [erro, setErro] = useState('');
   const [exibirCriacao, setExibirCriacao] = useState(false);
 
+  // Busca os dados do painel.
   async function carregarPainel() {
     try {
       setDados(await requisicaoApi('/groups/dashboard'));
@@ -20,14 +25,17 @@ export default function PaginaPainel() {
     }
   }
 
+  // Carrega o painel inicialmente.
   useEffect(() => {
     carregarPainel();
   }, []);
 
+  // Aguarda os dados iniciais.
   if (!dados && !erro) return <Carregamento texto="Carregando seus grupos..." />;
 
   return (
     <>
+      {/* Apresenta título e criação. */}
       <section className="dashboard-heading">
         <div>
           <h2>Resumo dos grupos</h2>
@@ -38,8 +46,10 @@ export default function PaginaPainel() {
         </button>
       </section>
 
+      {/* Exibe possíveis falhas. */}
       <Feedback>{erro}</Feedback>
 
+      {/* Resume os principais números. */}
       <section className="stats-grid">
         <CartaoResumo
           rotulo="Você recebe"
@@ -67,6 +77,7 @@ export default function PaginaPainel() {
         />
       </section>
 
+      {/* Lista os grupos recentes. */}
       <section className="section-block">
         <div className="section-heading">
           <div>
@@ -94,6 +105,7 @@ export default function PaginaPainel() {
         )}
       </section>
 
+      {/* Abre o cadastro de grupo. */}
       {exibirCriacao && (
         <ModalCriarGrupo
           aoFechar={() => setExibirCriacao(false)}
@@ -107,6 +119,7 @@ export default function PaginaPainel() {
   );
 }
 
+// Exibe um indicador resumido.
 function CartaoResumo({ rotulo, valor, observacao, estilo }) {
   return (
     <article className={`stat-card stat-card--${estilo}`}>
@@ -118,13 +131,16 @@ function CartaoResumo({ rotulo, valor, observacao, estilo }) {
   );
 }
 
+// Exibe os dados do grupo.
 function CartaoGrupo({ grupo }) {
+  // Escolhe a cor do saldo.
   const estiloSaldo = grupo.ownBalance > 0
     ? 'positive'
     : grupo.ownBalance < 0
       ? 'negative'
       : 'neutral';
 
+  // Monta a mensagem do saldo.
   let textoSaldo = 'Tudo acertado';
   if (grupo.ownBalance > 0) textoSaldo = `Você recebe ${formatarDinheiro(grupo.ownBalance)}`;
   if (grupo.ownBalance < 0) textoSaldo = `Você deve ${formatarDinheiro(Math.abs(grupo.ownBalance))}`;
@@ -149,16 +165,20 @@ function CartaoGrupo({ grupo }) {
   );
 }
 
+// Cadastra um novo grupo.
 function ModalCriarGrupo({ aoFechar, aoCriar }) {
+  // Controla formulário, erro e envio.
   const [formulario, setFormulario] = useState({ nome: '', descricao: '', emoji: '🎉' });
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Envia o novo grupo.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
 
+    // Persiste os dados informados.
     try {
       await requisicaoApi('/groups', {
         method: 'POST',
@@ -178,8 +198,10 @@ function ModalCriarGrupo({ aoFechar, aoCriar }) {
 
   return (
     <Modal titulo="Novo grupo" subtitulo="Crie um espaço para reunir as despesas." aoFechar={aoFechar}>
+      {/* Reúne os campos do grupo. */}
       <form className="form-stack" onSubmit={enviarFormulario}>
         <Feedback>{erro}</Feedback>
+        {/* Permite escolher um emoji. */}
         <div className="emoji-picker">
           {opcoesEmoji.map((emoji) => (
             <button

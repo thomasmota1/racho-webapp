@@ -1,22 +1,28 @@
+// Importa estado e componentes compartilhados.
 import { useState } from 'react';
 import { requisicaoApi } from '../../services/api.js';
 import { Feedback } from '../Feedback.jsx';
 import Modal from '../Modal.jsx';
 
+// Edita permissões do usuário.
 export function ModalUsuario({ usuario, aoFechar, aoSalvar }) {
+  // Preenche os dados atuais.
   const [formulario, setFormulario] = useState({
     nome: usuario.name,
     perfil: usuario.role,
     ativo: usuario.active,
   });
+  // Controla erro e salvamento.
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Envia alterações do usuário.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
 
+    // Persiste as alterações informadas.
     try {
       await requisicaoApi(`/admin/users/${usuario.id}`, {
         method: 'PATCH',
@@ -40,6 +46,7 @@ export function ModalUsuario({ usuario, aoFechar, aoSalvar }) {
       subtitulo="Altere o nome, o perfil ou o acesso à plataforma."
       aoFechar={aoFechar}
     >
+      {/* Reúne campos e ações. */}
       <form className="form-stack" onSubmit={enviarFormulario}>
         <Feedback>{erro}</Feedback>
         <label className="field">
@@ -86,22 +93,28 @@ export function ModalUsuario({ usuario, aoFechar, aoSalvar }) {
   );
 }
 
+// Cria ou edita categorias.
 export function ModalCategoria({ categoria, aoFechar, aoSalvar }) {
+  // Identifica o modo de edição.
   const editando = Boolean(categoria);
+  // Preenche os dados da categoria.
   const [formulario, setFormulario] = useState({
     nome: categoria?.name || '',
     icone: categoria?.icon || '🧾',
     cor: categoria?.color || '#6558d3',
     ativa: categoria?.active ?? true,
   });
+  // Controla erro e salvamento.
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Envia os dados da categoria.
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
 
+    // Cria ou atualiza o registro.
     try {
       const caminho = editando ? `/categories/${categoria.id}` : '/categories';
       await requisicaoApi(caminho, {
@@ -127,6 +140,7 @@ export function ModalCategoria({ categoria, aoFechar, aoSalvar }) {
       subtitulo="As categorias ficam disponíveis para todos os grupos."
       aoFechar={aoFechar}
     >
+      {/* Reúne campos e ações. */}
       <form className="form-stack" onSubmit={enviarFormulario}>
         <Feedback>{erro}</Feedback>
         <div className="form-grid">

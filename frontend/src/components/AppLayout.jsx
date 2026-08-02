@@ -1,22 +1,28 @@
+// Importa navegação e componentes visuais.
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { usarAutenticacao } from '../contexts/AuthContext.jsx';
 import Logotipo from './Logo.jsx';
 import Avatar from './Avatar.jsx';
 
+// Organiza a área interna autenticada.
 export default function LayoutAplicacao() {
+  // Obtém sessão e rota atual.
   const { usuario, sair } = usarAutenticacao();
   const localizacao = useLocation();
+  // Relaciona títulos com cada rota.
   const titulosPorRota = {
     '/': ['Visão geral', 'Acompanhe seus grupos e acertos.'],
     '/profile': ['Meu perfil', 'Atualize os dados da sua conta.'],
     '/admin': ['Administração', 'Consulte os dados cadastrados no sistema.'],
   };
+  // Escolhe o título da página.
   const [titulo, subtitulo] = localizacao.pathname.startsWith('/groups/')
     ? ['Detalhes do grupo', 'Despesas, pessoas, saldos e acertos.']
     : (titulosPorRota[localizacao.pathname] || ['Rachô', 'Despesas compartilhadas sem climão.']);
 
   return (
     <div className="app-shell">
+      {/* Exibe a navegação lateral. */}
       <aside className="sidebar">
         <Logotipo />
         <nav className="sidebar__nav">
@@ -32,6 +38,7 @@ export default function LayoutAplicacao() {
             </NavLink>
           )}
         </nav>
+        {/* Permite encerrar a sessão. */}
         <button className="sidebar__user" onClick={sair} title="Sair da conta">
           <Avatar nome={usuario.name} />
           <span>
@@ -41,6 +48,7 @@ export default function LayoutAplicacao() {
           <b>↗</b>
         </button>
       </aside>
+      {/* Exibe a página selecionada. */}
       <main className="main-content">
         <header className="topbar">
           <div>

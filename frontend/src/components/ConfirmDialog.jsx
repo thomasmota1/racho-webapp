@@ -1,7 +1,9 @@
+// Importa estado e elementos visuais.
 import { useState } from 'react';
 import Modal from './Modal.jsx';
 import { Feedback } from './Feedback.jsx';
 
+// Solicita confirmação antes da ação.
 export default function DialogoConfirmacao({
   titulo,
   mensagem,
@@ -9,13 +11,16 @@ export default function DialogoConfirmacao({
   aoConfirmar,
   aoFechar,
 }) {
+  // Controla envio e possíveis erros.
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
 
+  // Executa a ação confirmada.
   async function confirmar() {
     setSalvando(true);
     setErro('');
 
+    // Captura falhas da operação.
     try {
       await aoConfirmar();
       aoFechar();
@@ -27,6 +32,7 @@ export default function DialogoConfirmacao({
 
   return (
     <Modal titulo={titulo} subtitulo={mensagem} aoFechar={salvando ? () => {} : aoFechar}>
+      {/* Exibe erro e ações. */}
       <div className="form-stack">
         <Feedback>{erro}</Feedback>
         <div className="form-actions">

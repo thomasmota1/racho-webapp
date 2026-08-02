@@ -1,8 +1,10 @@
+// Importa navegação e formatadores.
 import { Link } from 'react-router-dom';
 import { formatarDataCurta, formatarDinheiro } from '../../utils/format.js';
 import Avatar from '../Avatar.jsx';
 import IndicadorStatus from '../StatusBadge.jsx';
 
+// Exibe indicadores gerais administrativos.
 export function ResumoAdministracao({ resumo }) {
   return (
     <section className="stats-grid admin-stats">
@@ -30,6 +32,7 @@ export function ResumoAdministracao({ resumo }) {
   );
 }
 
+// Exibe um número administrativo.
 function IndicadorAdministracao({ rotulo, valor, observacao }) {
   return (
     <article className="admin-stat">
@@ -40,6 +43,7 @@ function IndicadorAdministracao({ rotulo, valor, observacao }) {
   );
 }
 
+// Padroniza a estrutura das tabelas.
 function EstruturaTabela({ titulo, sobretitulo, acao, children }) {
   return (
     <section className="content-card admin-table-card">
@@ -55,6 +59,7 @@ function EstruturaTabela({ titulo, sobretitulo, acao, children }) {
   );
 }
 
+// Lista usuários e seus acessos.
 export function TabelaUsuarios({ usuarios, aoEditar }) {
   return (
     <EstruturaTabela sobretitulo="CONTAS" titulo="Usuários da plataforma">
@@ -69,6 +74,7 @@ export function TabelaUsuarios({ usuarios, aoEditar }) {
           </tr>
         </thead>
         <tbody>
+          {/* Monta uma linha por usuário. */}
           {usuarios.map((usuario) => (
             <tr key={usuario.id}>
               <td>
@@ -101,6 +107,7 @@ export function TabelaUsuarios({ usuarios, aoEditar }) {
   );
 }
 
+// Lista grupos cadastrados.
 export function TabelaGrupos({ grupos, aoExcluir }) {
   return (
     <EstruturaTabela sobretitulo="TODOS OS ROLÊS" titulo="Grupos cadastrados">
@@ -115,6 +122,7 @@ export function TabelaGrupos({ grupos, aoExcluir }) {
           </tr>
         </thead>
         <tbody>
+          {/* Monta uma linha por grupo. */}
           {grupos.map((grupo) => (
             <tr key={grupo.id}>
               <td>
@@ -140,7 +148,9 @@ export function TabelaGrupos({ grupos, aoExcluir }) {
   );
 }
 
+// Lista e gerencia categorias.
 export function TabelaCategorias({ categorias, aoCriar, aoEditar, aoExcluir }) {
+  // Prepara o botão de cadastro.
   const botaoCriar = (
     <button className="button button--primary button--small" onClick={aoCriar}>
       ＋ Categoria
@@ -159,6 +169,7 @@ export function TabelaCategorias({ categorias, aoCriar, aoEditar, aoExcluir }) {
           </tr>
         </thead>
         <tbody>
+          {/* Monta uma linha por categoria. */}
           {categorias.map((categoria) => (
             <tr key={categoria.id}>
               <td>

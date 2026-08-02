@@ -1,3 +1,4 @@
+// Importa recursos da página.
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { requisicaoApi } from '../services/api.js';
@@ -19,6 +20,7 @@ import {
   ModalPagamento,
 } from '../components/group/GroupModals.jsx';
 
+// Define as abas do grupo.
 const ABAS = [
   { id: 'despesas', rotulo: 'Despesas' },
   { id: 'saldos', rotulo: 'Saldos' },
@@ -26,18 +28,23 @@ const ABAS = [
   { id: 'pessoas', rotulo: 'Pessoas' },
 ];
 
+// Exibe os detalhes do grupo.
 export default function PaginaGrupo() {
+  // Obtém rota, navegação e usuário.
   const { id: grupoId } = useParams();
   const navegar = useNavigate();
   const { usuario } = usarAutenticacao();
+  // Controla dados, abas e modais.
   const [grupo, setGrupo] = useState(null);
   const [categorias, setCategorias] = useState([]);
   const [abaSelecionada, setAbaSelecionada] = useState('despesas');
   const [modalAberto, setModalAberto] = useState(null);
   const [erro, setErro] = useState('');
 
+  // Busca grupo e categorias.
   async function carregarGrupo() {
     try {
+      // Carrega dados em paralelo.
       const [dadosGrupo, dadosCategorias] = await Promise.all([
         requisicaoApi(`/groups/${grupoId}`),
         requisicaoApi('/categories'),
@@ -51,23 +58,28 @@ export default function PaginaGrupo() {
     }
   }
 
+  // Recarrega quando o grupo muda.
   useEffect(() => {
     carregarGrupo();
   }, [grupoId]);
 
+  // Verifica permissão de gerenciamento.
   const podeGerenciarGrupo = grupo
     && (usuario.role === 'ADMIN' || grupo.createdBy.id === usuario.id);
 
+  // Exclui o grupo atual.
   async function excluirGrupo() {
     await requisicaoApi(`/groups/${grupo.id}`, { method: 'DELETE' });
     navegar('/');
   }
 
+  // Fecha modal e atualiza dados.
   function fecharModalERecarregar() {
     setModalAberto(null);
     carregarGrupo();
   }
 
+  // Prepara exclusão da despesa.
   function pedirExclusaoDaDespesa(despesa) {
     setModalAberto({
       tipo: 'confirmacao',
@@ -81,6 +93,7 @@ export default function PaginaGrupo() {
     });
   }
 
+  // Prepara remoção do participante.
   function pedirRemocaoDaPessoa(membro) {
     setModalAberto({
       tipo: 'confirmacao',
@@ -94,13 +107,16 @@ export default function PaginaGrupo() {
     });
   }
 
+  // Trata o carregamento inicial.
   if (!grupo && !erro) return <Carregamento texto="Abrindo o grupo..." />;
   if (!grupo) return <Feedback>{erro}</Feedback>;
 
   return (
     <>
+      {/* Exibe possíveis falhas. */}
       <Feedback>{erro}</Feedback>
 
+      {/* Apresenta dados e ações. */}
       <CabecalhoGrupo
         grupo={grupo}
         podeGerenciar={podeGerenciarGrupo}
@@ -115,19 +131,23 @@ export default function PaginaGrupo() {
         aoAdicionarDespesa={() => setModalAberto({ tipo: 'despesa' })}
       />
 
+      {/* Resume números do grupo. */}
       <ResumoNumericoGrupo grupo={grupo} />
 
+      {/* Exibe o saldo pessoal. */}
       <ResumoSaldoGrupo
         grupo={grupo}
         usuario={usuario}
         aoAdicionarDespesa={() => setModalAberto({ tipo: 'despesa' })}
       />
 
+      {/* Alterna o conteúdo visível. */}
       <NavegacaoAbas
         abaSelecionada={abaSelecionada}
         aoSelecionar={setAbaSelecionada}
       />
 
+      {/* Exibe a aba selecionada. */}
       <section className="content-card group-content">
         {abaSelecionada === 'despesas' && (
           <ListaDespesas
@@ -157,6 +177,7 @@ export default function PaginaGrupo() {
         )}
       </section>
 
+      {/* Controla os modais da página. */}
       <ModaisDaPagina
         modalAberto={modalAberto}
         grupo={grupo}
@@ -173,6 +194,7 @@ export default function PaginaGrupo() {
   );
 }
 
+// Exibe informações e ações principais.
 function CabecalhoGrupo({ grupo, podeGerenciar, aoEditar, aoExcluir, aoAdicionarDespesa }) {
   return (
     <section className="group-header">
@@ -200,7 +222,9 @@ function CabecalhoGrupo({ grupo, podeGerenciar, aoEditar, aoExcluir, aoAdicionar
   );
 }
 
+// Resume os números do grupo.
 function ResumoNumericoGrupo({ grupo }) {
+  // Conta os acertos confirmados.
   const acertosConfirmados = grupo.settlements.filter(
     (acerto) => acerto.status === 'CONFIRMED',
   ).length;
@@ -227,6 +251,7 @@ function ResumoNumericoGrupo({ grupo }) {
   );
 }
 
+// Permite alternar entre abas.
 function NavegacaoAbas({ abaSelecionada, aoSelecionar }) {
   return (
     <nav className="tabs">
@@ -243,6 +268,7 @@ function NavegacaoAbas({ abaSelecionada, aoSelecionar }) {
   );
 }
 
+// Escolhe o modal adequado.
 function ModaisDaPagina({
   modalAberto,
   grupo,
@@ -252,6 +278,7 @@ function ModaisDaPagina({
   aoSalvar,
   aoSalvarPagamento,
 }) {
+  // Abre o formulário de despesa.
   if (modalAberto?.tipo === 'despesa') {
     return (
       <ModalDespesa
@@ -263,6 +290,7 @@ function ModaisDaPagina({
       />
     );
   }
+  // Abre o formulário de pagamento.
   if (modalAberto?.tipo === 'pagamento') {
     return (
       <ModalPagamento
@@ -274,12 +302,15 @@ function ModaisDaPagina({
       />
     );
   }
+  // Abre o formulário de participante.
   if (modalAberto?.tipo === 'pessoa') {
     return <ModalAdicionarPessoa grupo={grupo} aoFechar={aoFechar} aoSalvar={aoSalvar} />;
   }
+  // Abre a edição do grupo.
   if (modalAberto?.tipo === 'grupo') {
     return <ModalEditarGrupo grupo={grupo} aoFechar={aoFechar} aoSalvar={aoSalvar} />;
   }
+  // Abre o diálogo de confirmação.
   if (modalAberto?.tipo === 'confirmacao') {
     return (
       <DialogoConfirmacao
@@ -291,5 +322,6 @@ function ModaisDaPagina({
       />
     );
   }
+  // Não exibe modal fechado.
   return null;
 }

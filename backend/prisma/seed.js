@@ -1,10 +1,14 @@
+// Importa ambiente, segurança e banco.
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
+// Cria o cliente de preenchimento.
 const prisma = new PrismaClient();
 
+// Recria os dados demonstrativos.
 async function preencherBanco() {
+  // Limpa tabelas na ordem correta.
   await prisma.expenseShare.deleteMany();
   await prisma.settlement.deleteMany();
   await prisma.expense.deleteMany();
@@ -13,9 +17,11 @@ async function preencherBanco() {
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
 
+  // Criptografa as senhas demonstrativas.
   const senhaUsuariosHash = await bcrypt.hash('123456', 10);
   const senhaAdministradorHash = await bcrypt.hash('admin123', 10);
 
+  // Cria administrador e usuários comuns.
   const [, ana, bruno, carla] = await Promise.all([
     prisma.user.create({ data: { name: 'Administrador', email: 'admin@racho.com', passwordHash: senhaAdministradorHash, role: 'ADMIN' } }),
     prisma.user.create({ data: { name: 'Ana Souza', email: 'ana@racho.com', passwordHash: senhaUsuariosHash } }),
@@ -23,6 +29,7 @@ async function preencherBanco() {
     prisma.user.create({ data: { name: 'Carla Mendes', email: 'carla@racho.com', passwordHash: senhaUsuariosHash } }),
   ]);
 
+  // Cria as categorias iniciais.
   const categorias = await Promise.all([
     prisma.category.create({ data: { name: 'Alimentação', icon: '🍔', color: '#F97316' } }),
     prisma.category.create({ data: { name: 'Transporte', icon: '🚗', color: '#3B82F6' } }),
@@ -32,6 +39,7 @@ async function preencherBanco() {
     prisma.category.create({ data: { name: 'Outros', icon: '🧾', color: '#64748B' } }),
   ]);
 
+  // Cria o grupo de viagem.
   const viagem = await prisma.group.create({
     data: {
       name: 'Fim de semana em Caldas',
@@ -42,6 +50,7 @@ async function preencherBanco() {
     },
   });
 
+  // Cria o grupo do churrasco.
   const churrasco = await prisma.group.create({
     data: {
       name: 'Churrasco da turma',
@@ -52,6 +61,7 @@ async function preencherBanco() {
     },
   });
 
+  // Registra a despesa de hospedagem.
   await prisma.expense.create({
     data: {
       groupId: viagem.id,
@@ -70,6 +80,7 @@ async function preencherBanco() {
     },
   });
 
+  // Registra a despesa de transporte.
   await prisma.expense.create({
     data: {
       groupId: viagem.id,
@@ -87,6 +98,7 @@ async function preencherBanco() {
     },
   });
 
+  // Registra a despesa do churrasco.
   await prisma.expense.create({
     data: {
       groupId: churrasco.id,
@@ -104,6 +116,7 @@ async function preencherBanco() {
     },
   });
 
+  // Registra um pagamento confirmado.
   await prisma.settlement.create({
     data: {
       groupId: viagem.id,
@@ -118,9 +131,11 @@ async function preencherBanco() {
     },
   });
 
+  // Exibe as credenciais demonstrativas.
   console.log('Banco preenchido.');
   console.log('Administrador: admin@racho.com / admin123');
   console.log('Usuários: ana@racho.com, bruno@racho.com, carla@racho.com / 123456');
 }
 
+// Executa e encerra a conexão.
 preencherBanco().catch(console.error).finally(() => prisma.$disconnect());

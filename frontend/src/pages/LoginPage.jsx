@@ -39,13 +39,6 @@ export default function LoginPage() {
           <span className="eyebrow">DESPESAS COMPARTILHADAS</span>
           <h1>Feche as contas.<br />Não as amizades.</h1>
           <p>Organize gastos de viagens, churrascos, repúblicas e qualquer outro rolê.</p>
-          <div className="floating-summary">
-            <div>
-              <small>Esse rolê fecha com</small>
-              <strong>2 transferências</strong>
-            </div>
-            <span>✓</span>
-          </div>
         </div>
         <small className="auth-showcase__footer">O Rachô registra acertos. Nenhum dinheiro é movimentado.</small>
       </section>

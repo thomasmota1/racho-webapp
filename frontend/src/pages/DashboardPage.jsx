@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { api } from '../services/api.js';
 import { money } from '../utils/format.js';
 import Modal from '../components/Modal.jsx';
-import ActionCard from '../components/ActionCard.jsx';
 import { EmptyState, Feedback, Loading } from '../components/Feedback.jsx';
 
 const emojis = ['🎉', '🏖️', '🔥', '🏠', '🎓', '🎁', '🚗', '🍕'];
@@ -43,19 +42,6 @@ export default function DashboardPage() {
         <Stat label="Você deve" value={money(data?.summary.owes)} note="Valores a acertar" tone="negative" />
         <Stat label="Pendências" value={data?.summary.pendingSettlements || 0} note="Pagamentos aguardando confirmação" tone="warning" />
         <Stat label="Grupos ativos" value={data?.summary.groupCount || 0} note={`${money(data?.summary.totalExpenses)} registrados`} tone="neutral" />
-      </section>
-
-      <section className="section-block action-section">
-        <div className="section-heading"><div><span className="eyebrow">PRÓXIMAS AÇÕES</span><h2>O que precisa da sua atenção</h2></div></div>
-        <div className="action-grid">
-          {data?.groups.filter((group) => group.ownBalance < 0).slice(0, 2).map((group) => (
-            <ActionCard key={group.id} title={`Acertar ${group.name}`} text={`Você deve ${money(Math.abs(group.ownBalance))} neste grupo.`} action={<Link className="button button--small button--primary" to={`/groups/${group.id}`}>Ver acertos</Link>} />
-          ))}
-          {data?.groups.filter((group) => group.ownBalance >= 0).slice(0, Math.max(0, 2 - (data?.groups.filter((group) => group.ownBalance < 0).length || 0))).map((group) => (
-            <ActionCard key={group.id} title={`Abrir ${group.name}`} text={group.expenseCount ? 'Veja os saldos e os pagamentos do grupo.' : 'Adicione a primeira despesa deste grupo.'} action={<Link className="button button--small button--ghost" to={`/groups/${group.id}`}>Abrir grupo</Link>} />
-          ))}
-          {data?.groups.length === 0 && <ActionCard title="Crie o primeiro grupo" text="Reúna as pessoas e comece a dividir despesas." action={<button className="button button--small button--primary" onClick={() => setShowCreate(true)}>Novo grupo</button>} />}
-        </div>
       </section>
 
       <section className="section-block">

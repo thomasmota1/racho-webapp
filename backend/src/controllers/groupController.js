@@ -41,8 +41,8 @@ function enrichGroup(group) {
 export async function dashboard(request, response) {
   const groups = await prisma.group.findMany({
     where: request.user.role === 'ADMIN'
-      ? { status: 'ACTIVE' }
-      : { status: 'ACTIVE', members: { some: { userId: request.user.id } } },
+      ? {}
+      : { members: { some: { userId: request.user.id } } },
     include: groupInclude,
     orderBy: { updatedAt: 'desc' },
   });
@@ -68,7 +68,6 @@ export async function dashboard(request, response) {
       name: group.name,
       description: group.description,
       coverEmoji: group.coverEmoji,
-      status: group.status,
       memberCount: group.members.length,
       expenseCount: group.expenses.length,
       totalExpenses: enriched.totalExpenses,
@@ -88,20 +87,6 @@ export async function dashboard(request, response) {
     },
     groups: cards,
   });
-}
-
-export async function listGroups(request, response) {
-  const groups = await prisma.group.findMany({
-    where: request.user.role === 'ADMIN'
-      ? {}
-      : { members: { some: { userId: request.user.id } } },
-    include: {
-      _count: { select: { members: true, expenses: true } },
-      createdBy: { select: { id: true, name: true } },
-    },
-    orderBy: { updatedAt: 'desc' },
-  });
-  response.json(groups);
 }
 
 export async function getGroup(request, response) {
@@ -132,7 +117,7 @@ export async function createGroup(request, response) {
 export async function updateGroup(request, response) {
   const id = Number(request.params.id);
   await ensureGroupManager(id, request.user);
-  const { name, description, coverEmoji, status } = request.body;
+  const { name, description, coverEmoji } = request.body;
   const data = {};
   if (name !== undefined) {
     if (!name.trim()) throw new AppError('O nome do grupo não pode ficar vazio.');
@@ -140,8 +125,6 @@ export async function updateGroup(request, response) {
   }
   if (description !== undefined) data.description = description?.trim() || null;
   if (coverEmoji !== undefined) data.coverEmoji = coverEmoji;
-  if (status !== undefined) data.status = status;
-
   const group = await prisma.group.update({ where: { id }, data, include: groupInclude });
   response.json(enrichGroup(group));
 }

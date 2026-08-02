@@ -87,6 +87,9 @@ export async function updateExpense(request, response) {
   }
 
   const { title, description, amount, date, payerId, categoryId, participantIds } = request.body;
+  if (title !== undefined && !title.trim()) {
+    throw new AppError('O título da despesa não pode ficar vazio.');
+  }
   const finalAmount = amount ?? Number(existing.amount);
   const finalPayerId = payerId ?? existing.payerId;
   const finalCategoryId = categoryId ?? existing.categoryId;

@@ -32,10 +32,6 @@ export default function AppLayout() {
             </NavLink>
           )}
         </nav>
-        <div className="sidebar__tip">
-          <span>💡</span>
-          <p>Registre os gastos enquanto ainda estão frescos.</p>
-        </div>
         <button className="sidebar__user" onClick={logout} title="Sair da conta">
           <Avatar name={user.name} />
           <span>

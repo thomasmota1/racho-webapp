@@ -38,8 +38,8 @@ O administrador é o proprietário da aplicação, não apenas o organizador de 
 - editar ou excluir qualquer despesa;
 - confirmar ou recusar pagamentos informados pelos participantes;
 - criar, editar, desativar e excluir categorias;
-- editar nome, e-mail, senha, perfil e status de qualquer usuário;
-- excluir usuários e os dados relacionados.
+- editar nome, perfil e status de qualquer usuário;
+- desativar contas sem apagar o histórico relacionado.
 
 ## Estrutura do projeto
 
@@ -49,8 +49,7 @@ racho-webapp/
 │   ├── prisma/
 │   │   ├── migrations/
 │   │   ├── schema.prisma
-│   │   ├── seed.js
-│   │   └── bootstrap.js
+│   │   └── seed.js
 │   └── src/
 │       ├── controllers/
 │       ├── middlewares/
@@ -59,34 +58,33 @@ racho-webapp/
 │       ├── utils/
 │       ├── app.js
 │       └── server.js
-├── frontend/
-│   └── src/
-│       ├── components/
-│       ├── contexts/
-│       ├── pages/
-│       ├── services/
-│       ├── utils/
-│       ├── App.jsx
-│       └── styles.css
-├── docs/
+└── frontend/
+    └── src/
+        ├── components/
+        ├── contexts/
+        ├── pages/
+        ├── services/
+        ├── utils/
+        ├── App.jsx
+        └── styles.css
 ```
 
 ## Execução local
 
 É necessário ter Node.js, npm e PostgreSQL instalados localmente.
 
-### 1. Iniciar o PostgreSQL local
+### 1. Verificar o PostgreSQL local
 
-Na raiz do projeto, abra o PowerShell e execute:
+Este projeto usa a instalação local do PostgreSQL 17 na porta padrão `5432`. Confirme se o serviço está ativo:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe" -D ".postgres-data" -l ".postgres.log" -o "-p 55432 -h 127.0.0.1" start
+Get-Service postgresql*
 ```
 
 Confirme que a porta está aberta:
 
 ```powershell
-Test-NetConnection 127.0.0.1 -Port 55432
+Test-NetConnection 127.0.0.1 -Port 5432
 ```
 
 O resultado esperado é `TcpTestSucceeded : True`.
@@ -94,7 +92,7 @@ O resultado esperado é `TcpTestSucceeded : True`.
 Se o banco `racho` ainda não existir, crie-o com:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h 127.0.0.1 -p 55432 -U postgres -d postgres -c "CREATE DATABASE racho;"
+& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h 127.0.0.1 -p 5432 -U postgres -d postgres -c "CREATE DATABASE racho;"
 ```
 
 ### 2. Configurar e preparar o backend
@@ -105,10 +103,10 @@ npm install
 Copy-Item .env.example .env
 ```
 
-Confirme que `backend/.env` contém a porta `55432`:
+Confirme que `backend/.env` contém a porta `5432` e a senha configurada durante a instalação do PostgreSQL:
 
 ```env
-DATABASE_URL="postgresql://postgres@127.0.0.1:55432/racho?schema=public"
+DATABASE_URL="postgresql://postgres:SUA_SENHA@127.0.0.1:5432/racho?schema=public"
 JWT_SECRET="chave-local-do-projeto-racho"
 PORT=3333
 FRONTEND_URL="http://localhost:5173"
@@ -174,15 +172,6 @@ bruno@racho.com / 123456
 carla@racho.com / 123456
 ```
 
-### 6. Encerrar o PostgreSQL
-
-Quando terminarem os testes:
-
-```powershell
-cd ..
-& "C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe" -D ".postgres-data" stop
-```
-
 ## Como o cálculo funciona
 
 Para cada integrante, o backend calcula:
@@ -196,6 +185,7 @@ saldo = total pago - participação nas despesas
 - saldo zero: a pessoa está em dia.
 
 Depois, o backend separa credores e devedores e combina os valores até todos os saldos chegarem a zero.
+O resultado é uma sugestão prática de acertos, sem a promessa de ser o mínimo matemático em todos os casos.
 
 Exemplo:
 
@@ -211,14 +201,6 @@ Sugestões:
 Carla paga R$ 50 para Ana
 Carla paga R$ 20 para Bruno
 ```
-
-## Documentos para estudo
-
-- `PROPOSTA-PARA-ENTREGAR.md`: texto breve da proposta.
-- `docs/GUIA-DO-CODIGO.md`: explicação detalhada da aplicação.
-- `docs/ROTEIRO-DE-APRESENTACAO.md`: organização de uma apresentação de 25 a 30 minutos.
-- `docs/MODELAGEM-E-REQUISITOS.md`: tabelas, relacionamentos e atendimento ao enunciado.
-- `docs/DIVISAO-E-EXECUCAO.md`: responsabilidades da equipe, comandos e roteiro de testes.
 
 ## Observação sobre pagamentos
 

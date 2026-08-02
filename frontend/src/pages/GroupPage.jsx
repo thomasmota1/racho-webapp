@@ -353,7 +353,7 @@ function MemberModal({ group, onClose, onSaved }) {
 }
 
 function GroupEditModal({ group, onClose, onSaved }) {
-  const [form, setForm] = useState({ name: group.name, description: group.description || '', coverEmoji: group.coverEmoji, status: group.status });
+  const [form, setForm] = useState({ name: group.name, description: group.description || '', coverEmoji: group.coverEmoji });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   async function submit(event) {
@@ -361,8 +361,8 @@ function GroupEditModal({ group, onClose, onSaved }) {
     try { await api(`/groups/${group.id}`, { method: 'PATCH', body: JSON.stringify(form) }); onSaved(); } catch (err) { setError(err.message); } finally { setSaving(false); }
   }
   return (
-    <Modal title="Editar grupo" subtitle="Altere a identidade ou arquive o grupo." onClose={onClose}>
-      <form className="form-stack" onSubmit={submit}><Feedback>{error}</Feedback><div className="form-grid"><label className="field"><span>Emoji</span><input value={form.coverEmoji} maxLength="4" onChange={(e) => setForm({ ...form, coverEmoji: e.target.value })} /></label><label className="field"><span>Status</span><select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="ACTIVE">Ativo</option><option value="ARCHIVED">Arquivado</option></select></label><label className="field field--span-2"><span>Nome</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label><label className="field field--span-2"><span>Descrição</span><textarea rows="3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label></div><div className="form-actions"><button type="button" className="button button--ghost" onClick={onClose}>Cancelar</button><button className="button button--primary" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button></div></form>
+    <Modal title="Editar grupo" subtitle="Altere o nome, a descrição ou o emoji do grupo." onClose={onClose}>
+      <form className="form-stack" onSubmit={submit}><Feedback>{error}</Feedback><div className="form-grid"><label className="field"><span>Emoji</span><input value={form.coverEmoji} maxLength="4" onChange={(e) => setForm({ ...form, coverEmoji: e.target.value })} /></label><label className="field"><span>Nome</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label><label className="field field--span-2"><span>Descrição</span><textarea rows="3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label></div><div className="form-actions"><button type="button" className="button button--ghost" onClick={onClose}>Cancelar</button><button className="button button--primary" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button></div></form>
     </Modal>
   );
 }

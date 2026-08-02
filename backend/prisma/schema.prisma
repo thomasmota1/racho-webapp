@@ -12,11 +12,6 @@ enum Role {
   USER
 }
 
-enum GroupStatus {
-  ACTIVE
-  ARCHIVED
-}
-
 enum SettlementStatus {
   PENDING
   CONFIRMED
@@ -47,7 +42,6 @@ model Group {
   name        String
   description String?
   coverEmoji  String       @default("🎉")
-  status      GroupStatus  @default(ACTIVE)
   createdById Int
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt

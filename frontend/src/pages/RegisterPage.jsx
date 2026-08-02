@@ -32,7 +32,7 @@ export default function RegisterPage() {
         <div className="auth-showcase__content">
           <span className="eyebrow">COMECE EM POUCOS PASSOS</span>
           <h1>Um lugar para cada gasto do grupo.</h1>
-          <p>Crie um rolê, convide pessoas e deixe o cálculo por nossa conta.</p>
+          <p>Crie um rolê, adicione pessoas e deixe o cálculo por nossa conta.</p>
           <ul className="feature-checks">
             <li><span>✓</span> Divisão igual entre participantes</li>
             <li><span>✓</span> Saldos atualizados automaticamente</li>

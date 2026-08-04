@@ -208,6 +208,18 @@ Carla paga R$ 50 para Ana
 Carla paga R$ 20 para Bruno
 ```
 
+<<<<<<< Updated upstream
+=======
+## Documentos para estudo
+
+- `PROPOSTA-PARA-ENTREGAR.md`: texto breve da proposta.
+- `docs/GUIA-DO-CODIGO.md`: explicação detalhada da aplicação.
+- `docs/ROTEIRO-DE-APRESENTACAO.md`: organização de uma apresentação de 25 a 30 minutos.
+- `docs/MODELAGEM-E-REQUISITOS.md`: tabelas, relacionamentos e atendimento ao enunciado.
+- `docs/DIVISAO-E-EXECUCAO.md`: responsabilidades da equipe, comandos e roteiro de testes.
+- `docs/ROTEIRO-DEFESA-E-PERCURSOS.md`: roteiro detalhado para explicar ações do frontend ao banco.
+
+>>>>>>> Stashed changes
 ## Observação sobre pagamentos
 
 O sistema não se conecta ao Pix, a bancos ou a cartões. O pagamento acontece fora da aplicação. O Rachô registra:

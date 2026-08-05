@@ -1,4 +1,3 @@
-// Importa recursos da página.
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { requisicaoApi } from '../services/api.js';
@@ -20,7 +19,7 @@ import {
   ModalPagamento,
 } from '../components/group/GroupModals.jsx';
 
-// Define as abas do grupo.
+// Define as abas do grupo
 const ABAS = [
   { id: 'despesas', rotulo: 'Despesas' },
   { id: 'saldos', rotulo: 'Saldos' },
@@ -28,23 +27,20 @@ const ABAS = [
   { id: 'pessoas', rotulo: 'Pessoas' },
 ];
 
-// Exibe os detalhes do grupo.
 export default function PaginaGrupo() {
-  // Obtém rota, navegação e usuário.
+  // obtém rota
   const { id: grupoId } = useParams();
   const navegar = useNavigate();
   const { usuario } = usarAutenticacao();
-  // Controla dados, abas e modais.
+  // controla dados 
   const [grupo, setGrupo] = useState(null);
   const [categorias, setCategorias] = useState([]);
   const [abaSelecionada, setAbaSelecionada] = useState('despesas');
   const [modalAberto, setModalAberto] = useState(null);
   const [erro, setErro] = useState('');
 
-  // Busca grupo e categorias.
   async function carregarGrupo() {
     try {
-      // Carrega dados em paralelo.
       const [dadosGrupo, dadosCategorias] = await Promise.all([
         requisicaoApi(`/groups/${grupoId}`),
         requisicaoApi('/categories'),
@@ -58,28 +54,24 @@ export default function PaginaGrupo() {
     }
   }
 
-  // Recarrega quando o grupo muda.
+  // recarrega quando o grupo muda
   useEffect(() => {
     carregarGrupo();
   }, [grupoId]);
 
-  // Verifica permissão de gerenciamento.
   const podeGerenciarGrupo = grupo
     && (usuario.role === 'ADMIN' || grupo.createdBy.id === usuario.id);
 
-  // Exclui o grupo atual.
   async function excluirGrupo() {
     await requisicaoApi(`/groups/${grupo.id}`, { method: 'DELETE' });
     navegar('/');
   }
 
-  // Fecha modal e atualiza dados.
   function fecharModalERecarregar() {
     setModalAberto(null);
     carregarGrupo();
   }
 
-  // Prepara exclusão da despesa.
   function pedirExclusaoDaDespesa(despesa) {
     setModalAberto({
       tipo: 'confirmacao',
@@ -93,7 +85,6 @@ export default function PaginaGrupo() {
     });
   }
 
-  // Prepara remoção do participante.
   function pedirRemocaoDaPessoa(membro) {
     setModalAberto({
       tipo: 'confirmacao',
@@ -251,7 +242,7 @@ function ResumoNumericoGrupo({ grupo }) {
   );
 }
 
-// Permite alternar entre abas.
+
 function NavegacaoAbas({ abaSelecionada, aoSelecionar }) {
   return (
     <nav className="tabs">

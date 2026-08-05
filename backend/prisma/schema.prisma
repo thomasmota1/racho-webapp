@@ -1,9 +1,9 @@
-// Gera o cliente JavaScript.
+// gera cliente js
 generator client {
   provider = "prisma-client-js"
 }
 
-// Configura o banco PostgreSQL.
+// configura o banco PostgreSQL.
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

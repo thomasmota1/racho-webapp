@@ -1,10 +1,9 @@
-// Importa navegação e formatadores.
 import { Link } from 'react-router-dom';
 import { formatarDataCurta, formatarDinheiro } from '../../utils/format.js';
 import Avatar from '../Avatar.jsx';
 import IndicadorStatus from '../StatusBadge.jsx';
 
-// Exibe indicadores gerais administrativos.
+// indicadores gerais administrativos
 export function ResumoAdministracao({ resumo }) {
   return (
     <section className="stats-grid admin-stats">
@@ -148,7 +147,6 @@ export function TabelaGrupos({ grupos, aoExcluir }) {
   );
 }
 
-// Lista e gerencia categorias.
 export function TabelaCategorias({ categorias, aoCriar, aoEditar, aoExcluir }) {
   // Prepara o botão de cadastro.
   const botaoCriar = (

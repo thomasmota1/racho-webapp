@@ -1,4 +1,3 @@
-// Importa recursos dos formulários.
 import { useState } from 'react';
 import { requisicaoApi } from '../../services/api.js';
 import { dataParaInput, formatarDinheiro } from '../../utils/format.js';
@@ -6,16 +5,14 @@ import Avatar from '../Avatar.jsx';
 import { Feedback } from '../Feedback.jsx';
 import Modal from '../Modal.jsx';
 
-// Cria ou edita uma despesa.
+// cria ou edita uma despesa
 export function ModalDespesa({ grupo, categorias, despesa, aoFechar, aoSalvar }) {
-  // Identifica o modo de edição.
   const editando = Boolean(despesa);
-  // Define participantes selecionados inicialmente.
   const participantesIniciais = despesa
     ? despesa.shares.map((parte) => parte.user.id)
     : grupo.members.map((membro) => membro.user.id);
 
-  // Preenche os campos da despesa.
+  // preenche os campos da despesa
   const [formulario, setFormulario] = useState({
     titulo: despesa?.title || '',
     descricao: despesa?.description || '',
@@ -25,7 +22,7 @@ export function ModalDespesa({ grupo, categorias, despesa, aoFechar, aoSalvar })
     categoriaId: despesa?.category.id || categorias[0]?.id,
     participantesIds: participantesIniciais,
   });
-  // Controla erro e salvamento.
+  // Controla erro e salvamento
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
@@ -312,20 +309,19 @@ export function ModalPagamento({ grupo, usuario, sugestao, aoFechar, aoSalvar })
   );
 }
 
-// Adiciona uma pessoa ao grupo.
 export function ModalAdicionarPessoa({ grupo, aoFechar, aoSalvar }) {
-  // Controla e-mail, erro e envio.
+  // controla
   const [email, setEmail] = useState('');
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
-  // Envia o convite por e-mail.
+  // envia o convite por e-mail
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);
     setErro('');
 
-    // Adiciona o usuário encontrado.
+    // add usuario
     try {
       await requisicaoApi(`/groups/${grupo.id}/members`, {
         method: 'POST',

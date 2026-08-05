@@ -1,4 +1,3 @@
-// Importa estado e componentes compartilhados.
 import { useState } from 'react';
 import { requisicaoApi } from '../../services/api.js';
 import { Feedback } from '../Feedback.jsx';
@@ -93,22 +92,18 @@ export function ModalUsuario({ usuario, aoFechar, aoSalvar }) {
   );
 }
 
-// Cria ou edita categorias.
 export function ModalCategoria({ categoria, aoFechar, aoSalvar }) {
-  // Identifica o modo de edição.
   const editando = Boolean(categoria);
-  // Preenche os dados da categoria.
   const [formulario, setFormulario] = useState({
     nome: categoria?.name || '',
     icone: categoria?.icon || '🧾',
     cor: categoria?.color || '#6558d3',
     ativa: categoria?.active ?? true,
   });
-  // Controla erro e salvamento.
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
-  // Envia os dados da categoria.
+  // categoria não existe = post, categoria existe = patch id
   async function enviarFormulario(evento) {
     evento.preventDefault();
     setSalvando(true);

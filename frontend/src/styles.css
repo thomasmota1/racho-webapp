@@ -35,7 +35,7 @@ h1, h2, h3, p { margin-top: 0; }
 
 /* Estiliza a marca do sistema. */
 .logo { display: inline-flex; align-items: center; gap: 11px; color: #fff; }
-.logo__mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 8px; background: #8d7dff; color: #fff; font-size: 15px; font-weight: 900; letter-spacing: -1px; }
+.logo__mark { display: block; width: 42px; height: 42px; object-fit: contain; }
 .logo__name { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
 
 /* Estiliza textos auxiliares. */
@@ -105,6 +105,7 @@ h1, h2, h3, p { margin-top: 0; }
 .demo-access div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .demo-access button { border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 9px; color: #56576a; font-size: 12px; font-weight: 750; }
 .mobile-logo { display: none; margin-bottom: 35px; }
+.mobile-logo .logo__mark { filter: invert(1); }
 .mobile-logo .logo__name { color: var(--ink); }
 
 /* Estrutura navegação e conteúdo internos. */
